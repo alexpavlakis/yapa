@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = F, warning = F, message = F, cache = T, resuts = F,
 ```
 
 
-Yapa is a simple poll aggregator that estimates state-level support for US presidential candidates by combining state-level polls with previous election results.  It relies only on polling data and prior election results, not economic or demographic indicators, since any impact these have on results will materialize in polls before the election.  Its strength is appropriate handling of uncertainty.  80% intervals are calibrated to include 80% of results in previous presidential elections.
+Yapa is a simple poll aggregator that estimates state-level support for US presidential candidates by combining state-level polls with previous election results.  It relies only on polling data and prior election results, not economic or demographic indicators.  Its strength is appropriate handling of uncertainty.  80% intervals are calibrated to include 80% of results in previous presidential elections.
 
 # Model
 
@@ -18,15 +18,16 @@ We model state level support for each presidential candidate with three layers:
 
 1) **Prior**: the results in that state from the previous general election, adjusted by partisan swings between previous national election results and current national polls;
 2) **Data**: state-level polls, weighted by recency and sample size;
-3) **Non-sampling error**: polling error based on its historical distribution, allowing for correlated errors across states.
+3) **Non-sampling error**: polling error based on its historical distribution.
 
-Specifically, the number of respondents that support each candidate in each poll $y_{p, c}$ is drawn from the total respondents in that poll $n_p$ at a rate specific to the candidate and the state $\theta_{s, c}$.  The rate parameters are distributed with a candidate-state specific center $\alpha_{c, s}$.  The sum of proportions for each candidate must equal one.  Finally, to simulate true underlying support, we first sample a vector of *biases* for each candidate, then sample support based on each state's rate parameter and the sampled bias.  These simulations are repeated tens of thousands of times.
+Specifically, the number of respondents that support each candidate in each poll $y_{p, c}$ is drawn from the total respondents in that poll $n_p$ at a candidate and state specific polling average $\theta_{s, c}$.  The polling averages are drawn from a measurement error model of true underlying support for each candidate in each state $\mu_{s, c}$ plus candidate-state specific errors inferred from historical polling averages and election results. $\mu_{s, c}$ are drawn from a distribution centered at the results for each candidate in each state in the previous election, with a standard deviation equal to historical state-level swings between presidential elections of 6%.
 
 $$
 \begin{align}
 y_{p, c} &\sim Binomial(n_p, \theta_{s, c}) \\
-\theta_{s, c} &\sim Student\_t(\nu, \alpha_{s, c}, \tau) \\
-\sum_c \theta_s &= 1 
+\theta_{s, c} &\sim Normal(\mu_{s, c} + error_{s, c}, \sigma_{s, c}) \\
+\mu_{s, c} &\sim Normal(\alpha_{s, c}, 0.6) \\
+\sum_c \mu_s &= 1 
 \end{align}
 $$
 
@@ -49,43 +50,3 @@ plot(days, wt, type = "l", bty = 'n',
      xlab = "days from election", ylab = "discount factor",
      main = NULL)
 ```
-
-
-```{r plot, eval = FALSE}
-library(tidyverse)
-load("../results/ppc16")
-
-# Plot
-ppc16 %>%
-  ggplot() +
-  aes(x = mean, y = dem, xmin = lower, xmax = upper, 
-      label = abb, col = dem) + 
-  geom_abline(intercept = 0, slope = 1, lty = 2, col = 'darkgrey') +
-  geom_point(alpha = 0.8, cex = 0.7) +  
-  geom_errorbarh(height = 0, alpha = 0.7, lwd = 0.4) +
-  ggrepel::geom_text_repel(size = 3, lwd = 0.4) +
-  scale_color_gradient(low = "red", high = "blue") +
-  scale_x_continuous(limits = c(0, 1),
-                     labels = paste0(seq(0, 100, 25), "%")) +
-  scale_y_continuous(limits = c(0, 1),
-                     labels = paste0(seq(0, 100, 25), "%")) +
-  guides(col = F) +
-  theme_minimal() +
-  labs(x = "prediction", y = "result",
-       title = "Model predictions and election results: 2016") +
-  theme(plot.title = element_text(size = 15, face = "bold")) 
-
-```
-
-```{r table, eval = FALSE}
-ppc16 %>%
-  select(state, `lower prediction` = lower,
-         prediction = mean, `upper prediction` = upper, 
-         result = dem) %>%
-  mutate_if(is.numeric, function(x) paste0(round(x*100, 1), "%")) %>%
-  DT::datatable(., options = list(scrollX = TRUE, 
-                                  scrollY = "200px",
-                                  pageLength = 51))
-
-```
-

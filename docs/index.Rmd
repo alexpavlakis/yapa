@@ -54,7 +54,7 @@ Biden is projected to win **between `r biden[1]` and `r biden[2]`** electoral co
 data_frame(
   electoral_votes = c(ec_sims[, 1], ec_sims[, 2]),
   candidate = c(rep("Trump", nrow(ec_sims)), rep("Biden", nrow(ec_sims)))
-) %>% filter(electoral_votes != 268) %>%
+) %>% 
   ggplot() +
   aes(x = electoral_votes, fill = candidate, y = ..density..) +
   geom_histogram(alpha = 0.7, bins = 538,
@@ -247,8 +247,6 @@ results_biden %>%
 ```
 
 
-
-Note that uncertainties at this time are due to a) close races and/or b) few polls.  As more polls become available and election day nears, error bars should shrink and the range of reasonable potential outcomes should narrow.
 
 
 ```{r table}
