@@ -20,13 +20,13 @@ We model state level support for each presidential candidate with three layers:
 2) **Data**: state-level polls, weighted by recency and sample size;
 3) **Non-sampling error**: polling error based on its historical distribution.
 
-Specifically, the number of respondents that support each candidate in each poll $y_{p, c}$ is drawn from the total respondents in that poll $n_p$ at a candidate and state specific polling average $\theta_{s, c}$.  The polling averages are drawn from a measurement error model of true underlying support for each candidate in each state $\mu_{s, c}$ plus candidate-state specific errors inferred from historical polling averages and election results. $\mu_{s, c}$ are drawn from a distribution centered at the results for each candidate in each state in the previous election, with a standard deviation equal to historical state-level swings between presidential elections of 6%.
+Specifically, the number of respondents that support each candidate in each poll $y_{p, c}$ is drawn from the total respondents in that poll $n_p$ at a candidate and state specific polling average $\theta_{s, c}$.  The polling averages are drawn from a measurement error model of true underlying support for each candidate in each state $\mu_{s, c}$, with candidate-state specific errors inferred from historical polling averages and election results. The true support $\mu_{s, c}$ is drawn from a distribution centered at the results for each candidate in each state in the previous election, with a standard deviation equal to historical state-level swings between presidential elections of 6%.
 
 $$
 \begin{align}
 y_{p, c} &\sim Binomial(n_p, \theta_{s, c}) \\
-\theta_{s, c} &\sim Normal(\mu_{s, c} + error_{s, c}, \sigma_{s, c}) \\
-\mu_{s, c} &\sim Normal(\alpha_{s, c}, 0.6) \\
+\theta_{s, c} &\sim Normal(\mu_{s, c} + \epsilon_{s, c}, \sigma_{s, c}) \\
+\mu_{s, c} &\sim Normal(\alpha_{s, c}, 0.06) \\
 \sum_c \mu_s &= 1 
 \end{align}
 $$
@@ -46,7 +46,8 @@ days <- seq(0, 365, 1)
 wt <- exp(-days/40)
 
 par(las = 1, mar = c(4, 4, 1, 1))
-plot(days, wt, type = "l", bty = 'n', 
+plot(days, wt, type = "l", bty = 'n', xaxt = 'n',
      xlab = "days from election", ylab = "discount factor",
      main = NULL)
+axis(1, at = seq(0, 300, 30))
 ```

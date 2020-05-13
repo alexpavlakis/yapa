@@ -303,12 +303,12 @@ $(document).ready(function () {
 <li><strong>Data</strong>: state-level polls, weighted by recency and sample size;</li>
 <li><strong>Non-sampling error</strong>: polling error based on its historical distribution.</li>
 </ol>
-<p>Specifically, the number of respondents that support each candidate in each poll <span class="math inline">\(y_{p, c}\)</span> is drawn from the total respondents in that poll <span class="math inline">\(n_p\)</span> at a candidate and state specific polling average <span class="math inline">\(\theta_{s, c}\)</span>. The polling averages are drawn from a measurement error model of true underlying support for each candidate in each state <span class="math inline">\(\mu_{s, c}\)</span> plus candidate-state specific errors inferred from historical polling averages and election results. <span class="math inline">\(\mu_{s, c}\)</span> are drawn from a distribution centered at the results for each candidate in each state in the previous election, with a standard deviation equal to historical state-level swings between presidential elections of 6%.</p>
+<p>Specifically, the number of respondents that support each candidate in each poll <span class="math inline">\(y_{p, c}\)</span> is drawn from the total respondents in that poll <span class="math inline">\(n_p\)</span> at a candidate and state specific polling average <span class="math inline">\(\theta_{s, c}\)</span>. The polling averages are drawn from a measurement error model of true underlying support for each candidate in each state <span class="math inline">\(\mu_{s, c}\)</span>, with candidate-state specific errors inferred from historical polling averages and election results. The true support <span class="math inline">\(\mu_{s, c}\)</span> is drawn from a distribution centered at the results for each candidate in each state in the previous election, with a standard deviation equal to historical state-level swings between presidential elections of 6%.</p>
 <p><span class="math display">\[
 \begin{align}
 y_{p, c} &amp;\sim Binomial(n_p, \theta_{s, c}) \\
-\theta_{s, c} &amp;\sim Normal(\mu_{s, c} + error_{s, c}, \sigma_{s, c}) \\
-\mu_{s, c} &amp;\sim Normal(\alpha_{s, c}, 0.6) \\
+\theta_{s, c} &amp;\sim Normal(\mu_{s, c} + \epsilon_{s, c}, \sigma_{s, c}) \\
+\mu_{s, c} &amp;\sim Normal(\alpha_{s, c}, 0.06) \\
 \sum_c \mu_s &amp;= 1 
 \end{align}
 \]</span></p>

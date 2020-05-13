@@ -15,3 +15,5 @@ rvest
 Rcpp
 gridExtra
 pander
+maps
+plotly
