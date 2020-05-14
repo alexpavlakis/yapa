@@ -70,7 +70,7 @@ n_states <- n_distinct(polls$state)
 n_options <- ncol(y)
 
 # Days out from election (for weighting)
-days_out <- as.numeric(polls$days_out)
+days_out <- as.numeric(polls$days_out) -100
 
 # load historical bias data
 bias_mat <- read_csv("results/bias_mat.csv") %>% as.matrix()
@@ -95,12 +95,10 @@ model_data <- list(n_options = n_options,
 
 # Fit model ---------------------------------------------------------------
 
-m <- stan(file = "stan/yapa_states_adj.stan", data = model_data,
+m <- stan(file = "stan/yapa_states.stan", data = model_data,
           chains = 10, iter = 5000)
 
 em <- rstan::extract(m)
-
-
 
 
 # Results -----------------------------------------------------------------

@@ -57,7 +57,7 @@ data_frame(
 ) %>% 
   ggplot() +
   aes(x = electoral_votes, fill = candidate, y = ..density..) +
-  geom_histogram(alpha = 0.7, bins = 538,
+  geom_histogram(alpha = 0.7, bins = 270,
                  position = "identity") +
   scale_x_continuous(limits = c(0, 538),
                      breaks = c(seq(0, 538, 100), 270)) +

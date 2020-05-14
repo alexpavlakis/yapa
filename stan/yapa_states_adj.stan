@@ -35,7 +35,7 @@ transformed data {
 }
 parameters {
   simplex[n_options] theta[n_states]; // simplex of simulated poll averages
-  simplex[n_options] mu[n_states];    // simplex of simulated election proportions
+  //simplex[n_options] mu[n_states];    // simplex of simulated election proportions
 }
 model {
   for(o in 1:n_options) {
@@ -45,8 +45,19 @@ model {
   }
   for(o in 1:n_options) {
     for(s in 1:n_states) {
-      theta[s][o] ~ normal(mu[s][o] - bias[s, o], sd_bias[s, o]);
-      mu[s][o] ~ normal(priors[s, o], 0.06);
+      //theta[s][o] ~ student_t(3, mu[s][o] - bias[s, o], sd_bias[s, o]);
+      //mu[s][o] ~ student_t(1, priors[s, o], 0.06);
+      theta[s][o] ~ student_t(3, priors[s, o], 0.06);
+    }
+  }
+}
+generated quantities {
+  matrix[n_states, n_options] mu;
+  matrix[n_states, n_options] error;
+  for(o in 1:n_options) {
+    error[, o] = multi_normal_rng(bias[, o], sd_bias[, o]);
+    for(s in 1:n_states) {
+      mu[s, o] = theta[s][o] + error[s, o];
     }
   }
 }

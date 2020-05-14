@@ -54,12 +54,22 @@ bias <- ge_polls %>%
   ) %>%
   arrange(state)
 
+
+
+
+par(mfrow = c(3, 1)) 
+for(i in seq(2008, 2016, 4)) {
+  hist(bias$cand1_bias[bias$year == i], xlim = c(-.1, .15), breaks = 20)
+  abline(v = mean(bias$cand1_bias[bias$year == i]), lty = 2)
+}
+
+# Rearrange - rep, dem, other
 bias_model_data <- list(
   'N' = nrow(bias),
   'n_states' = length(unique(bias$location)),
   'n_options' = 3,
   'state_id' = match(bias$location, unique(bias$location)),
-  'bias' = bias %>% select(cand1_bias, cand2_bias, cand3_bias) %>% as.matrix()
+  'bias' = bias %>% select(cand2_bias, cand1_bias, cand3_bias) %>% as.matrix()
 )
 
 
@@ -76,3 +86,37 @@ bias_sd_mat <- round(colMeans(ebf$tau_bias), 3)
 
 write.csv(bias_mat, "results/bias_mat.csv", row.names = F)
 write.csv(bias_sd_mat, "results/bias_sd_mat.csv", row.names = F)
+
+
+
+
+
+
+library(rstan)
+
+
+fd <- MASS::mvrnorm(100, c(1, 2), matrix(c(1, 1, 1, 1), nrow = 2))
+
+d <- list(
+  nrow = nrow(fd),
+  ncol = ncol(fd),
+  fd = fd
+)
+
+mcode <- "
+data {
+  int nrow;
+  int ncol;
+  vector[ncol] fd[nrow];
+}rm
+paramters {
+  cov_matrix[ncol] Sigma;
+}
+model {
+  vector[ncol] mu;
+  fd ~ multi_normal(mu, Sigma);
+}"
+
+fit <- stan(model_code = mcode, data = d, chains = 3, iter = 1000)
+fit
+r
