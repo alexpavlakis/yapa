@@ -1,6 +1,7 @@
 library(tidyverse)
 library(rstan)
 
+date_diff <- function(t1, t2) as.numeric(difftime(t1, t2, "day"))
 
 # Data --------------------------------------------------------------------
 
@@ -31,7 +32,7 @@ get_est <- function(y, n , wt) {
 }
 
 # Calculate historical bias in state poll averages
-bias <- ge_polls %>%
+bias_data <- ge_polls %>%
   mutate(cand1_count = cand1_pct*samplesize,
          cand2_count = cand2_pct*samplesize,
          cand3_count = cand3_pct*samplesize,
@@ -48,75 +49,94 @@ bias <- ge_polls %>%
          cand2_bias = (cand2_actual - cand2_est),
          cand3_bias = (cand3_actual - cand3_est)) %>%
   ungroup() %>%
-  filter(location != 'US') %>%
   left_join(
     data_frame(state = state.name, location = state.abb)
   ) %>%
   arrange(state)
 
-
-
-
-par(mfrow = c(3, 1)) 
-for(i in seq(2008, 2016, 4)) {
-  hist(bias$cand1_bias[bias$year == i], xlim = c(-.1, .15), breaks = 20)
-  abline(v = mean(bias$cand1_bias[bias$year == i]), lty = 2)
+# Process into matrices
+get_bias_mat <- function(bias_data, yr) {
+  df <- bias_data %>%
+    filter(year == yr) %>%
+    select(state, rep_bias = cand2_bias, dem_bias = cand1_bias, other_bias = cand3_bias) %>%
+    right_join(data_frame(state = unique(bias_data$state))) %>%
+    select(-state) %>%
+    as.matrix()
+  df <- apply(df, 2, function(x) ifelse(is.na(x), 0, x))
+  df
 }
 
-# Rearrange - rep, dem, other
-bias_model_data <- list(
-  'N' = nrow(bias),
-  'n_states' = length(unique(bias$location)),
-  'n_options' = 3,
-  'state_id' = match(bias$location, unique(bias$location)),
-  'bias' = bias %>% select(cand2_bias, cand1_bias, cand3_bias) %>% as.matrix()
-)
+d <- lapply(c(2008, 2012, 2016), get_bias_mat, bias_data = bias_data %>% filter(location != 'US'))
 
-
-# Model -------------------------------------------------------------------
-
-bias_fit <- stan("stan/bias_model.stan", data = bias_model_data,
-            chains = 3, iter = 1000)
-
-ebf <- extract(bias_fit)
-
-# Save historical bias mean and sd 
-bias_mat <- colMeans(ebf$mu_bias)
-bias_sd_mat <- round(colMeans(ebf$tau_bias), 3)
-
-write.csv(bias_mat, "results/bias_mat.csv", row.names = F)
-write.csv(bias_sd_mat, "results/bias_sd_mat.csv", row.names = F)
-
-
-
-
-
-
-library(rstan)
-
-
-fd <- MASS::mvrnorm(100, c(1, 2), matrix(c(1, 1, 1, 1), nrow = 2))
-
-d <- list(
-  nrow = nrow(fd),
-  ncol = ncol(fd),
-  fd = fd
+mdata <- list(
+  n_states = nrow(d[[1]]),
+  n_options = ncol(d[[1]]),
+  d1 = d[[1]],
+  d2 = d[[2]],
+  d3 = d[[3]]
 )
 
 mcode <- "
 data {
-  int nrow;
-  int ncol;
-  vector[ncol] fd[nrow];
-}rm
-paramters {
-  cov_matrix[ncol] Sigma;
+  int n_states;
+  int n_options;
+  vector[n_options] d1[n_states];
+  vector[n_options] d2[n_states];
+  vector[n_options] d3[n_states];
+}
+parameters {
+  vector[n_options] mu;
+  corr_matrix[n_options] Omega;
+  vector<lower = 0>[n_options] tau;
+  matrix<lower = 0>[n_states, n_options] sigma;
+  
+}
+transformed parameters {
+  matrix[n_options, n_options] Sigma;
+  Sigma = quad_form_diag(Omega, tau);
 }
 model {
-  vector[ncol] mu;
-  fd ~ multi_normal(mu, Sigma);
+  Omega ~ lkj_corr(1);
+  tau ~ cauchy(0, 1);
+  mu ~ normal(0, 0.1);
+  d1 ~ multi_normal(mu, Sigma);
+  d2 ~ multi_normal(mu, Sigma);
+  d3 ~ multi_normal(mu, Sigma);
+  for(o in 1:n_options) {
+    for(s in 1:n_states) {
+      d1[s][o] ~ normal(mu[o], sigma[s, o]);
+      d2[s][o] ~ normal(mu[o], sigma[s, o]);
+      d3[s][o] ~ normal(mu[o], sigma[s, o]);
+      sigma[s, o] ~ normal(0, 0.1);
+    }
+  }
 }"
 
-fit <- stan(model_code = mcode, data = d, chains = 3, iter = 1000)
-fit
-r
+fb <- stan(model_code = mcode, data = mdata, chains = 3, iter = 1000)
+
+fb
+
+efb <- extract(fb)
+
+swing <- colMeans(efb$mu)
+state_sigma <- round(colMeans(efb$sigma), 3)
+swing_sigma <- colMeans(efb$Sigma)
+
+# load historical bias data
+save(swing, file = "data/swing")
+save(swing_sigma, file = "data/swing_sigma")
+save(state_sigma, file = 'data/state_sigma')
+
+
+
+
+# General election swing --------------------------------------------------
+
+d_ge <- lapply(c(2008, 2012, 2016), get_bias_mat, bias_data = bias_data %>% filter(location == 'US'))
+
+mdata <- list(
+  n_options = length(d_ge[[1]]),
+  d1 = d_ge[[1]],
+  d2 = d_ge[[2]],
+  d3 = d_ge[[3]]
+)

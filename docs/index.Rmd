@@ -54,25 +54,29 @@ Biden is projected to win **between `r biden[1]` and `r biden[2]`** electoral co
 data_frame(
   electoral_votes = c(ec_sims[, 1], ec_sims[, 2]),
   candidate = c(rep("Trump", nrow(ec_sims)), rep("Biden", nrow(ec_sims)))
-) %>% 
+) %>% filter(electoral_votes != 268) %>%
   ggplot() +
   aes(x = electoral_votes, fill = candidate, y = ..density..) +
-  geom_histogram(alpha = 0.7, bins = 270,
+  geom_histogram(alpha = 0.7, bins = 538,
                  position = "identity") +
   scale_x_continuous(limits = c(0, 538),
                      breaks = c(seq(0, 538, 100), 270)) +
   scale_fill_manual(values = c("blue", "red")) +
-  geom_vline(xintercept = 270, lty = 2, col = "black") +
+  geom_vline(xintercept = 270, lty = 2, col = "darkgrey") +
   theme_minimal() +
-  labs(x = NULL, y = NULL, fill = NULL,
-       title = "distribution of electoral college votes") +
+  labs(x = "electoral college votes", y = NULL, fill = NULL,
+       title = "simulated electoral college vote distributions") +
   theme(legend.position = "bottom",
-        plot.title = element_text(size = 15, face = "bold", hjust = .5,
+        plot.title = element_text(size = 15,face = 'bold', hjust = .5,
                                   color = "#007ba7"),
-        plot.subtitle = element_text(size = 8),
-        panel.grid = element_blank(),
+        plot.subtitle = element_text(hjust = .5, color = "#007ba7", size = 10),
+        strip.text = element_text(size = 15, face = "bold", hjust = .5,
+                                  color = "#007ba7"),
+        panel.grid.minor = element_blank(),
         axis.text.y = element_blank(),
-        axis.text.x = element_text(size = 11)) 
+        axis.text.x = element_text(size = 11)) +
+  facet_wrap(~candidate, nrow = 2) +
+  guides(fill = F)
 
 ```
 
@@ -103,7 +107,8 @@ ec_ts %>%
   theme_minimal() +
   scale_color_manual(values = c("blue", "red")) +
   scale_fill_manual(values = c("blue", "red")) +
-  labs(col = NULL, fill = NULL, x = NULL, title = NULL,
+  labs(col = NULL, fill = NULL, x = NULL, 
+       title = 'how the electoral college forecast has changed over time',
        y = "electoral college votes") +
   theme(panel.grid.minor = element_blank(),
         legend.position = "bottom", 

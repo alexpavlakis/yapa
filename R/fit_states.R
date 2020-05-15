@@ -16,6 +16,7 @@ source("R/process_polls.R")
 state <- prior_results$state
 
 # Return all state polls from 538, add 0s for states with no polls, so that prior dominates
+if(!exists("exec_date")) exec_date <- Sys.Date()
 polls <- data_frame(state) %>% 
   left_join(
     process_538() %>%
@@ -28,7 +29,6 @@ polls <- data_frame(state) %>%
          days_out = ifelse(is.na(days_out), 365, days_out))
 
 # Model data --------------------------------------------------------------
-
 
 
 # Counts for each option in each state poll
@@ -70,11 +70,13 @@ n_states <- n_distinct(polls$state)
 n_options <- ncol(y)
 
 # Days out from election (for weighting)
-days_out <- as.numeric(polls$days_out) -100
+days_out <- as.numeric(polls$days_out) 
 
 # load historical bias data
-bias_mat <- read_csv("results/bias_mat.csv") %>% as.matrix()
-bias_sd_mat <- read_csv("results/bias_sd_mat.csv") %>% as.matrix()
+## These are calculated in R/fit_bias.R
+load("data/swing") 
+load("data/swing_sigma")
+load("data/state_sigma")
 
 # Combine into list
 model_data <- list(n_options = n_options, 
@@ -85,8 +87,9 @@ model_data <- list(n_options = n_options,
                    state_id = state_id,
                    priors = priors,
                    days_out = days_out,
-                   bias = bias_mat,
-                   sd_bias = bias_sd_mat,
+                   mu_swing = swing,
+                   sigma_swing = swing_sigma,
+                   sd_swing_state = state_sigma,
                    decay_param = 40)
 
 
@@ -173,6 +176,7 @@ for(i in 1:dim(em$mu)[1]) {
   }
 }
 
+
 save(ec_sims, file = "results/ec_sims")
 
 # Create data frame of results for tracking
@@ -237,3 +241,4 @@ state_ts <- state_ts %>%
   rbind(state_ts_today)
 
 write_csv(state_ts, "results/state_ts.csv")
+

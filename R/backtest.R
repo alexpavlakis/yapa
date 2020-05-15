@@ -146,21 +146,21 @@ em <- rstan::extract(m)
 
 # Visualize ---------------------------------------------------------------
 
-# Results
-means_trump <- apply(em$results, 2, function(x) mean(x[, 1]))
-quantiles_trump <- apply(em$results, 2, function(x) quantile(x[, 1], c(0.05, 0.95)))
+# mu
+means_trump <- apply(em$mu, 2, function(x) mean(x[, 1]))
+quantiles_trump <- apply(em$mu, 2, function(x) quantile(x[, 1], c(0.05, 0.95)))
 
-means_clinton <- apply(em$results, 2, function(x) mean(x[, 2]))
-quantiles_clinton <- apply(em$results, 2, function(x) quantile(x[, 2], c(0.05, 0.95)))
+means_clinton <- apply(em$mu, 2, function(x) mean(x[, 2]))
+quantiles_clinton <- apply(em$mu, 2, function(x) quantile(x[, 2], c(0.05, 0.95)))
 
-results_clinton <- data_frame(
+mu_clinton <- data_frame(
   state = state,
   lower = quantiles_clinton[1, ],
   mean  = means_clinton,
   upper = quantiles_clinton[2, ],
   cand  = 'clinton')
 
-results_trump <- data_frame(
+mu_trump <- data_frame(
   state = state,
   lower = quantiles_trump[1, ],
   mean  = means_trump,
@@ -168,12 +168,12 @@ results_trump <- data_frame(
   cand  = 'trump')
 
 # Formatted Table
-state_results <- results_clinton %>%
+state_mu <- mu_clinton %>%
   rename(`Lower Clinton` = lower,
          `Upper Clinton` = upper,
          `Mean Clinton`  = mean) %>%
   select(-cand) %>%
-  left_join(results_trump %>%
+  left_join(mu_trump %>%
               rename(`Lower Trump` = lower,
                      `Upper Trump` = upper,
                      `Mean Trump`  = mean) %>%
@@ -181,7 +181,7 @@ state_results <- results_clinton %>%
   rename(State = state) %>%
   arrange(-`Mean Clinton`) 
 
-save(state_results, file = "results/state_results_16")
+save(state_mu, file = "results/state_results_16")
 
 
 
@@ -189,13 +189,13 @@ save(state_results, file = "results/state_results_16")
 
 # Simulate electoral college ----------------------------------------------
 
-ec_sims <- matrix(0, nrow = dim(em$results)[1], ncol = dim(em$results)[3])
+ec_sims <- matrix(0, nrow = dim(em$mu)[1], ncol = dim(em$mu)[3])
 
-# Simulate elections and results
-for(s in 1:dim(em$results)[2]) {
-  for(o in 1:dim(em$results)[3]) {
-    for(i in 1:dim(em$results)[1]) {
-      if(em$results[i, s, o] == max(em$results[i, s, ])) {
+# Simulate elections and mu
+for(s in 1:dim(em$mu)[2]) {
+  for(o in 1:dim(em$mu)[3]) {
+    for(i in 1:dim(em$mu)[1]) {
+      if(em$mu[i, s, o] == max(em$mu[i, s, ])) {
         ec_sims[i, o] <- ec_sims[i, o] + prior_results$ev[s]
       }
     }
@@ -208,7 +208,7 @@ save(ec_sims, file = "results/ec_sims_16")
 data_frame(
   electoral_votes = c(ec_sims[, 1], ec_sims[, 2]),
   candidate = c(rep("Trump", nrow(ec_sims)), rep("Clinton", nrow(ec_sims)))
-) %>% 
+) %>% filter(electoral_votes != 268) %>%
   ggplot() +
   aes(x = electoral_votes, fill = candidate, y = ..density..) +
   geom_histogram(alpha = 0.7, bins = 538,
@@ -225,7 +225,9 @@ data_frame(
         plot.subtitle = element_text(size = 8),
         panel.grid = element_blank(),
         axis.text.y = element_blank(),
-        axis.text.x = element_text(size = 11))
+        axis.text.x = element_text(size = 11)) +
+  facet_wrap(~candidate, nrow = 2) +
+  guides(fill = F)
 
 
 
@@ -236,7 +238,7 @@ sdf <- data.frame(abb = c(state.abb, "DC"),
 
 # Join predictions with actual results
 ppc16 <- read_csv("data/state_results_16.csv") %>% 
-  left_join(state_results %>% rename(state = State)) %>% 
+  left_join(state_mu %>% rename(state = State)) %>% 
   select(dem, mean = `Mean Clinton`, lower = `Lower Clinton`, 
          upper = `Upper Clinton`, state) %>%
   left_join(sdf)

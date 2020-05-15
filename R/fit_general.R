@@ -28,8 +28,8 @@ n_options <- ncol(y_ge)
 days_out_ge <- as.numeric(polls_ge$days_out)
 
 # load historical bias data
-bias_mat_ge <- read_csv("results/bias_mat_ge.csv") %>% as.matrix()
-bias_sd_mat_ge <- read_csv("results/bias_sd_mat_ge.csv") %>% as.matrix()
+load("data/bias_mat_ge")
+load("data/bias_sd_mat_ge")
 
 # Combine into list
 model_data_ge <- list(N_ge = N_ge,
