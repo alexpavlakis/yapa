@@ -50,7 +50,7 @@ trump <- round(quantile(ec_sims[, 1], c(0.05, 0.95)))
 Biden is projected to win **between `r biden[1]` and `r biden[2]`** electoral college votes.  Trump is projected to win **between `r trump[1]` and `r trump[2]`** electoral college votes.  In `r dim(ec_sims)[1]` simulations of the presidential election from the perspective of `r gsub(" 0", " ", format(Sys.Date(), format="%B %d, %Y"))`, Biden wins **`r paste0(round(mean(ec_sims[, 2] > ec_sims[, 1])*100), "%")`** and Trump wins **`r paste0(round(mean(ec_sims[, 1] > ec_sims[, 2])*100), "%")`**.
 
 
-```{r ecplot, results = T, fig.width = 10}
+```{r ecplot, results = T}
 data_frame(
   electoral_votes = c(ec_sims[, 1], ec_sims[, 2]),
   candidate = c(rep("Trump", nrow(ec_sims)), rep("Biden", nrow(ec_sims)))
@@ -67,8 +67,7 @@ data_frame(
   labs(x = "electoral college votes", y = NULL, fill = NULL,
        title = "simulated electoral college vote distributions") +
   theme(legend.position = "bottom",
-        plot.title = element_text(size = 15,face = 'bold', hjust = .5,
-                                  color = "#007ba7"),
+        plot.title = element_text(size = 15, face = "bold", color = "#007ba7", hjust = 0.5),
         plot.subtitle = element_text(hjust = .5, color = "#007ba7", size = 10),
         strip.text = element_text(size = 15, face = "bold", hjust = .5,
                                   color = "#007ba7"),
