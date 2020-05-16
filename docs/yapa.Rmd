@@ -5,33 +5,44 @@ output:
     theme: cerulean
 ---
 
+<style type="text/css">
+body { 
+  font-size: 16px;
+}
+</style>
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = F, warning = F, message = F, cache = T, resuts = F, fig.align = 'center')
 ```
 
 
-Yapa is a simple poll aggregator that estimates state-level support for US presidential candidates by combining state-level polls with previous election results.  It relies only on polling data and prior election results, not economic or demographic indicators.  Its strength is appropriate handling of uncertainty.  80% intervals are calibrated to include 80% of results in previous presidential elections.
+Yapa is a simple poll aggregator that estimates state-level support for US presidential candidates by combining polls with previous election results to estimate distributions of potential election results.
+
+Yapa starts with previous election results as a baseline estimate for candidate support in each state.  As state and national polling data become available, it updates that estimate, adjusting for poll sample size and recency, and accounting for swings in the national popular vote.  These estimates are its poll averages in each state.  In states with few recent polls, or poll results in a wide range, there will be considerable uncertainty around these poll averages.  In states with many recent polls that mostly agree, the uncertainty will be lower.
+
+Yapa then runs tens of thousands of simulations to generate distributions for national and state-level support for each candidate.  In each simulation, it considers the possibility of systematic polling error — e.g., state polls that underestimate support for the Democrat by 1% on average — and generates an election result based on that possibility.  The estimates for polling error are based on their historical distributions, and are rarely outside the range of 1-2%.  However, if poll averages in many states are close, that systematic polling error can be an important factor in the outcome. 
 
 # Model
 
-We model state level support for each presidential candidate with three layers:
+Yapa models state level support for each presidential candidate with three layers:
 
 1) **Prior**: the results in that state from the previous general election, adjusted by partisan swings between previous national election results and current national polls;
-2) **Data**: state-level polls, weighted by recency and sample size;
-3) **Non-sampling error**: polling error based on its historical distribution.
+2) **Data**: state-level and national polls, weighted by recency and sample size;
+3) **Non-sampling error**: systematic polling error based on its historical distribution.
 
-Specifically, the number of respondents that support each candidate in each poll $y_{p, c}$ is drawn from the total respondents in that poll $n_p$ at a candidate and state specific polling average $\theta_{s, c}$.  The polling averages are drawn from a measurement error model of true underlying support for each candidate in each state $\mu_{s, c}$, with candidate-state specific errors inferred from historical polling averages and election results. The true support $\mu_{s, c}$ is drawn from a distribution centered at the results for each candidate in each state in the previous election, with a standard deviation equal to historical state-level swings between presidential elections of 6%.
+Specifically, the number of respondents that support each candidate in each poll $y_{p, c}$ is drawn from the total respondents in that poll $n_p$ at a candidate and state specific polling average $\theta_{s, c}$.  The polling averages are anchored by a normal model centered on previous election results for each candidate in each state which are adjusted by trends in current national polls $\alpha_{s, c}$.  In the absense of state level polling, $\alpha$ stands in as the best available estimate. The election outcome $\mu_{s, c}$ is drawn from a distribution centered at the estimated polling average for each candidate in each state, with a candidate specific national swing $\epsilon_{c}$ and state specific deviation $\sigma_{s}$.  $\epsilon$ is estimated from historic swings in the previous three elections, taking careful account for correlations across candidates.  If one candidate outperforms their polls, another usually underperforms, and if one candidate outperforms in one state, they are likely to outperform in other states too. $\sigma$ is estimated from historical polling errors in each state.
 
 $$
 \begin{align}
 y_{p, c} &\sim Binomial(n_p, \theta_{s, c}) \\
-\theta_{s, c} &\sim Normal(\mu_{s, c} + \epsilon_{s, c}, \sigma_{s, c}) \\
-\mu_{s, c} &\sim Normal(\alpha_{s, c}, 0.06) \\
-\sum_c \mu_s &= 1 
+\theta_{s, c} &\sim Normal(\alpha_{s, c}, \tau) \\
+\mu_{s, c} &\sim Normal(\theta_{s, c} + \epsilon_{c}, \sigma_{s}) \\
+\epsilon_{c} &\sim MultiNormal(M, \Sigma) 
 \end{align}
 $$
 
-All code and data are available at [github.com/alexpavlakis/yapa](https://github.com/alexpavlakis/yapa).
+All code and data are available at [github.com/alexpavlakis/yapa](https://github.com/alexpavlakis/yapa).  Polls are pulled from [538](https://projects.fivethirtyeight.com/polls) and [RealClearPolitics](https://www.realclearpolitics.com/epolls/latest_polls/).
 
 ## Weighting 
 
@@ -51,3 +62,5 @@ plot(days, wt, type = "l", bty = 'n', xaxt = 'n',
      main = NULL)
 axis(1, at = seq(0, 300, 30))
 ```
+
+A rough rule of thumb is that a poll seven days from the election will get about twice as much weight as a poll seven weeks from the election.  Polls more than three months out get very little weight, and will contribute little to inferences when there are polls closer to the election.

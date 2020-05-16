@@ -7,6 +7,11 @@ output:
     toc_float: true
     toc_depth: 4
 ---
+<style type="text/css">
+body { 
+  font-size: 16px;
+}
+</style>
 
 
 ```{r setup, include=FALSE}
@@ -206,8 +211,8 @@ map_plot <- map_data %>%
          `p(biden)` = round(p_biden, 2)) %>%
   ggplot() +
   aes(x = long, y = lat, group = group, label = state, fill = `p(biden)`) +
-  geom_polygon(col = 'grey', lwd = 0.2, alpha = 0.8) +
-  scale_fill_gradient(low = 'red', high = 'blue') +
+  geom_polygon(col = 'grey', lwd = 0.2, alpha = 0.9) +
+  scale_fill_gradient2(low = 'red', midpoint = 0.5, mid = 'purple', high = 'blue') +
   guides(fill = F) +
   labs(title = NULL, x = NULL, y = NULL) +
   theme_void() +
