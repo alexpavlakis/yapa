@@ -340,7 +340,7 @@ for (s in p_biden$state) {
                            & state_ts$date == max(state_ts$date)], 0), '% and ',
                            round(100*state_ts$upper_trump[state_ts$state == s 
                            & state_ts$date == max(state_ts$date)], 0), 
-                           '%.  In ', dim(state_simulations)[1]/(51*3), 
+                           '%.  Out of ', dim(state_simulations)[1]/(51*3), 
                            ' simulations of the election in ', s, 
                            ', Biden wins ', pwin, ' and Trump wins ', 
                            ptrump, '.'))
