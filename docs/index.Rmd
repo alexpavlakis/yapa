@@ -30,6 +30,7 @@ load("../results/results_biden")
 load("../results/results_trump")
 load("../results/ge_trend")
 load("../results/pv_sims")
+
 # Latest popular vote estimate
 current_rates <- ge_trend %>% filter(day == max(day)) %>% pull(prop)
 popular_vote <- ge_trend %>% 
@@ -40,6 +41,7 @@ popular_vote <- ge_trend %>%
 
 state_ts <- read_csv("../results/state_ts.csv")
 prior_results <- read_csv("../data/state_results_16.csv")
+polls <- read_csv("../data/polls.csv")
 ```
 
 _Updated `r gsub(" 0", " ", format(Sys.Date(), format="%B %d, %Y"))`._
@@ -171,12 +173,12 @@ p_biden %>%
                          p_biden > 0.1 & p_biden < 0.3 ~ "Lean Trump", 
                          TRUE ~ "Uncertain")) %>%
   group_by(cat) %>%
-  arrange(p_biden) %>%
+  arrange(-p_biden) %>%
   mutate(rank = row_number()) %>%
   ungroup() %>%
   mutate(rank = max(rank) - rank) %>%
   ggplot() +
-  aes(x = reorder(cat, p_biden), y = rank, label = state, col = p_biden) +
+  aes(x = reorder(cat, -p_biden), y = rank, label = state, col = p_biden) +
   geom_text() +
   geom_text(alpha = 0.8, size = 4) +
   scale_x_discrete(position = "top") +
@@ -222,7 +224,10 @@ map_plot <- map_data %>%
         axis.line = element_blank(),
         panel.border = element_blank())
 
-ggplotly(map_plot)
+ggplotly(map_plot) %>% 
+  config(displayModeBar = FALSE) %>% 
+  layout(xaxis = list(fixedrange = TRUE),
+         yaxis = list(fixedrange = TRUE))
 
 ```
 
@@ -347,4 +352,17 @@ for (s in p_biden$state) {
    plot_state_ts(s)
    pander::pandoc.p('\n')
 }
+```
+
+# Polls
+
+```{r polls-table}
+polls %>%
+  arrange(state, days_out) %>%
+  filter(Sample > 0) %>%
+  mutate(`Trump (R)` = paste0(round(`Trump (R)`/Sample, 2)*100, "%"),
+         `Biden (D)` = paste0(round(`Biden (D)`/Sample, 2)*100, "%"),
+         Other = paste0(round(Other/Sample, 2)*100, "%")) %>%
+  select(State = state, `Trump (R)`, `Biden (D)`, Other, Sample, `Poll End Date` = end_date) %>%
+  DT::datatable(options = list(scrollX = TRUE, scrollY = "500px", pageLength = nrow(polls)))
 ```

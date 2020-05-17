@@ -27,6 +27,7 @@ polls <- data_frame(state) %>%
          `Biden (D)` = ifelse(is.na(`Biden (D)`), 0, `Biden (D)`),
          Other = ifelse(is.na(Other), 0, Other),
          days_out = ifelse(is.na(days_out), 365, days_out))
+write_csv(polls, "data/polls.csv")
 
 # Model data --------------------------------------------------------------
 
