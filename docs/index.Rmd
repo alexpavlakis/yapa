@@ -44,7 +44,7 @@ prior_results <- read_csv("../data/state_results_16.csv")
 polls <- read_csv("../data/polls.csv")
 ```
 
-_Updated `r gsub(" 0", " ", format(Sys.Date(), format="%B %d, %Y"))`._
+_Updated `r gsub(" 0", " ", format(Sys.Date(), format="%B %d, %Y"))`, `r as.numeric(as.Date("2020-11-03") - Sys.Date())` days from election day 2020._
 
 # Who will win the electoral college?
 

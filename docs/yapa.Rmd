@@ -27,7 +27,7 @@ Once it has estimated poll averages, Yapa then runs tens of thousands of simulat
 
 Yapa models support for each presidential candidate with three layers:
 
-1) **Prior**: the results in that state from the previous general election, adjusted by partisan swings between previous national election results and current national polls;
+1) **Prior**: the results in each state from the previous general election, adjusted by swings between previous national election results and current national polls;
 2) **Data**: state-level and national polls, weighted by recency and sample size;
 3) **Non-sampling error**: systematic polling error based on its historical distribution.
 
