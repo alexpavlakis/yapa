@@ -66,16 +66,19 @@ get_bias_mat <- function(bias_data, yr) {
   df
 }
 
-d <- lapply(c(2008, 2012, 2016), get_bias_mat, bias_data = bias_data %>% filter(location != 'US'))
+d <- lapply(seq(2000, 2016, 4), get_bias_mat, bias_data = bias_data %>% filter(location != 'US'))
 
 mdata <- list(
   n_states = nrow(d[[1]]),
   n_options = ncol(d[[1]]),
   d1 = d[[1]],
   d2 = d[[2]],
-  d3 = d[[3]]
+  d3 = d[[3]],
+  d4 = d[[4]],
+  d5 = d[[5]]
 )
 
+# Model code to estimate distribution of errors in state and ge polls
 mcode <- "
 data {
   int n_states;
@@ -83,6 +86,8 @@ data {
   vector[n_options] d1[n_states];
   vector[n_options] d2[n_states];
   vector[n_options] d3[n_states];
+  vector[n_options] d4[n_states];
+  vector[n_options] d5[n_states];
 }
 parameters {
   vector[n_options] mu;
@@ -96,17 +101,21 @@ transformed parameters {
   Sigma = quad_form_diag(Omega, tau);
 }
 model {
-  Omega ~ lkj_corr(1);
-  tau ~ cauchy(0, 1);
+  Omega ~ lkj_corr(0.9);
+  tau ~ normal(0, 0.1);
   mu ~ normal(0, 0.1);
   d1 ~ multi_normal(mu, Sigma);
   d2 ~ multi_normal(mu, Sigma);
   d3 ~ multi_normal(mu, Sigma);
+  d4 ~ multi_normal(mu, Sigma);
+  d5 ~ multi_normal(mu, Sigma);
   for(o in 1:n_options) {
     for(s in 1:n_states) {
       d1[s][o] ~ normal(mu[o], sigma[s, o]);
       d2[s][o] ~ normal(mu[o], sigma[s, o]);
       d3[s][o] ~ normal(mu[o], sigma[s, o]);
+      d4[s][o] ~ normal(mu[o], sigma[s, o]);
+      d5[s][o] ~ normal(mu[o], sigma[s, o]);
       sigma[s, o] ~ normal(0, 0.1);
     }
   }
@@ -122,6 +131,10 @@ swing <- colMeans(efb$mu)
 state_sigma <- round(colMeans(efb$sigma), 3)
 swing_sigma <- colMeans(efb$Sigma)
 
+sims <- MASS::mvrnorm(n = 25000, mu = swing, Sigma = swing_sigma)
+apply(sims, 2, mean)
+apply(sims, 2, sd)
+
 # load historical bias data
 save(swing, file = "data/swing")
 save(swing_sigma, file = "data/swing_sigma")
@@ -132,11 +145,32 @@ save(state_sigma, file = 'data/state_sigma')
 
 # General election swing --------------------------------------------------
 
-d_ge <- lapply(c(2008, 2012, 2016), get_bias_mat, bias_data = bias_data %>% filter(location == 'US'))
+d_ge <- lapply(seq(2000, 2016, 4), get_bias_mat, bias_data = bias_data %>% filter(location == 'US'))
 
 mdata <- list(
+  n_states = 1,
   n_options = length(d_ge[[1]]),
-  d1 = d_ge[[1]],
-  d2 = d_ge[[2]],
-  d3 = d_ge[[3]]
+  d1 = matrix(d_ge[[1]], nrow = 1),
+  d2 = matrix(d_ge[[2]], nrow = 1),
+  d3 = matrix(d_ge[[3]], nrow = 1),
+  d4 = matrix(d_ge[[4]], nrow = 1),
+  d5 = matrix(d_ge[[5]], nrow = 1)
 )
+
+fb_ge <- stan(model_code = mcode, data = mdata, chains = 3, iter = 1000)
+
+fb_ge
+
+e_fb_ge <- extract(fb_ge)
+
+swing_ge <- colMeans(e_fb_ge$mu)
+swing_sigma_ge <- colMeans(e_fb_ge$Sigma)
+
+sims <- MASS::mvrnorm(n = 25000, mu = swing_ge, Sigma = swing_sigma_ge)
+apply(sims, 2, mean)
+apply(sims, 2, sd)
+
+# load historical bias data
+save(swing_ge, file = "data/swing_ge")
+save(swing_sigma_ge, file = "data/swing_sigma_ge")
+

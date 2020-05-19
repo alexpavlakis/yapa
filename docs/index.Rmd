@@ -71,15 +71,16 @@ data_frame(
   scale_fill_manual(values = c("blue", "red")) +
   geom_vline(xintercept = 270, lty = 2, col = "darkgrey") +
   theme_minimal() +
-  labs(x = "electoral college votes", y = NULL, fill = NULL,
-       title = "simulated electoral college vote distributions") +
+  labs(x = "electoral college votes", y = NULL, fill = NULL, 
+       title = "distribution of potential electoral college outcomes") +
   theme(legend.position = "bottom",
-        plot.title = element_text(size = 15, face = "bold", color = "#007ba7", hjust = 0.5),
+        plot.title = element_text(size = 16, color = "#007ba7", hjust = 0.5),
         plot.subtitle = element_text(hjust = .5, color = "#007ba7", size = 10),
-        strip.text = element_text(size = 15, face = "bold", hjust = .5,
+        strip.text = element_text(size = 15, hjust = .5,
                                   color = "#007ba7"),
         panel.grid.minor = element_blank(),
         axis.text.y = element_blank(),
+        axis.title.x = element_text(color = 'grey35'),
         axis.text.x = element_text(size = 11)) +
   facet_wrap(~candidate, nrow = 2) +
   guides(fill = F)
@@ -176,11 +177,12 @@ p_biden %>%
   arrange(-p_biden) %>%
   mutate(rank = row_number()) %>%
   ungroup() %>%
-  mutate(rank = max(rank) - rank) %>%
+  mutate(rank = max(rank) - rank,
+         state = ifelse(state == 'District of Columbia', 'D.C.', state)) %>%
   ggplot() +
   aes(x = reorder(cat, -p_biden), y = rank, label = state, col = p_biden) +
   geom_text() +
-  geom_text(alpha = 0.8, size = 4) +
+  geom_text(alpha = 0.8, size = 4, face = 'bold') +
   scale_x_discrete(position = "top") +
   theme_void() +
   theme(axis.text.x = element_text(size = 12, face = "bold", color = "#007ba7"),

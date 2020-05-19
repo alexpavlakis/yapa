@@ -25,19 +25,19 @@ N_ge <- nrow(y_ge)
 n_options <- ncol(y_ge)
 
 # Days out from election
-days_out_ge <- as.numeric(polls_ge$days_out)
+days_out_ge <- as.numeric(polls_ge$days_out) 
 
 # load historical bias data
-load("data/bias_mat_ge")
-load("data/bias_sd_mat_ge")
+load("data/swing_ge")
+load("data/swing_sigma_ge")
 
 # Combine into list
 model_data_ge <- list(N_ge = N_ge,
                       y_ge = y_ge,
                       n_options = n_options,
                       days_out_ge = days_out_ge,
-                      bias = bias_mat_ge,
-                      sd_bias = bias_sd_mat_ge,
+                      mu_swing = swing_ge,
+                      sigma_swing = swing_sigma_ge,
                       decay_param = 40)
 
 
