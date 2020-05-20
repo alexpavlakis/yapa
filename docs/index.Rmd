@@ -121,7 +121,7 @@ ec_ts %>%
         legend.position = "bottom", 
         axis.text.x = element_text(angle = 45, hjust = 1),
         axis.title.y = element_text(size = 9),
-        plot.title = element_text(size = 15, face = "bold", color = "#007ba7", hjust = 0.5)) +
+        plot.title = element_text(size = 16, color = "#007ba7", hjust = 0.5)) +
   guides(col = F, fill = F)
 
 
@@ -185,7 +185,7 @@ p_biden %>%
   geom_text(alpha = 0.8, size = 4, face = 'bold') +
   scale_x_discrete(position = "top") +
   theme_void() +
-  theme(axis.text.x = element_text(size = 12, face = "bold", color = "#007ba7"),
+  theme(axis.text.x = element_text(size = 15, color = "#007ba7"),
         axis.text.y = element_blank(),
         plot.title = element_text(color = "#007ba7")) +
   labs(x = NULL, y = NULL) +
@@ -257,7 +257,7 @@ results_biden %>%
                      labels = paste0(seq(0, 100, 25), "%")) +
   labs(x = "vote share", y = NULL,
        title = "estimated vote share by state") +
-  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5, color = "#007ba7"),
+  theme(plot.title = element_text(size = 16, hjust = 0.5, color = "#007ba7"),
         plot.subtitle = element_text(size = 7),
         axis.text.y = element_text(size = 9))
 ```

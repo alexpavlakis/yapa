@@ -98,6 +98,10 @@ process_538 <- function() {
     mutate(`Trump (R)` = round(Trump*sample_size/100),
            `Biden (D)` = round(Biden*sample_size/100),
            Other = round(sample_size - `Trump (R)` - `Biden (D)`)) %>%
+    group_by(poll_id) %>%
+    arrange(-Other) %>%
+    filter(row_number() == 1) %>% # If a pollster asks with and without other option, only keep with
+    ungroup() %>%
     select(Sample = sample_size, `Trump (R)`, `Biden (D)`, days_out, Other, 
            state, end_date) %>% 
     na.omit()
