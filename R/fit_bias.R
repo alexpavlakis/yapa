@@ -63,8 +63,13 @@ get_bias_mat <- function(bias_data, yr) {
     select(-state) %>%
     as.matrix()
   df <- apply(df, 2, function(x) ifelse(is.na(x), 0, x))
+  names(df) <- NULL
   df
 }
+
+
+# States ------------------------------------------------------------------
+
 
 d <- lapply(seq(2000, 2016, 4), get_bias_mat, bias_data = bias_data %>% filter(location != 'US'))
 
@@ -75,53 +80,13 @@ mdata <- list(
   d2 = d[[2]],
   d3 = d[[3]],
   d4 = d[[4]],
-  d5 = d[[5]]
+  d5 = d[[5]],
 )
 
 # Model code to estimate distribution of errors in state and ge polls
-mcode <- "
-data {
-  int n_states;
-  int n_options;
-  vector[n_options] d1[n_states];
-  vector[n_options] d2[n_states];
-  vector[n_options] d3[n_states];
-  vector[n_options] d4[n_states];
-  vector[n_options] d5[n_states];
-}
-parameters {
-  vector[n_options] mu;
-  corr_matrix[n_options] Omega;
-  vector<lower = 0>[n_options] tau;
-  matrix<lower = 0>[n_states, n_options] sigma;
-  
-}
-transformed parameters {
-  matrix[n_options, n_options] Sigma;
-  Sigma = quad_form_diag(Omega, tau);
-}
-model {
-  Omega ~ lkj_corr(0.9);
-  tau ~ normal(0, 0.1);
-  mu ~ normal(0, 0.1);
-  d1 ~ multi_normal(mu, Sigma);
-  d2 ~ multi_normal(mu, Sigma);
-  d3 ~ multi_normal(mu, Sigma);
-  d4 ~ multi_normal(mu, Sigma);
-  d5 ~ multi_normal(mu, Sigma);
-  for(o in 1:n_options) {
-    for(s in 1:n_states) {
-      d1[s][o] ~ normal(mu[o], sigma[s, o]);
-      d2[s][o] ~ normal(mu[o], sigma[s, o]);
-      d3[s][o] ~ normal(mu[o], sigma[s, o]);
-      d4[s][o] ~ normal(mu[o], sigma[s, o]);
-      d5[s][o] ~ normal(mu[o], sigma[s, o]);
-      sigma[s, o] ~ normal(0, 0.1);
-    }
-  }
-}"
 
-fb <- stan(model_code = mcode, data = mdata, chains = 3, iter = 1000)
+
+fb <- stan("stan/bias.stan", data = mdata, chains = 3, iter = 1000)
 
 fb
 
@@ -142,10 +107,11 @@ save(state_sigma, file = 'data/state_sigma')
 
 
 
+# National ----------------------------------------------------------------
 
-# General election swing --------------------------------------------------
 
 d_ge <- lapply(seq(2000, 2016, 4), get_bias_mat, bias_data = bias_data %>% filter(location == 'US'))
+
 
 mdata <- list(
   n_states = 1,
@@ -157,7 +123,7 @@ mdata <- list(
   d5 = matrix(d_ge[[5]], nrow = 1)
 )
 
-fb_ge <- stan(model_code = mcode, data = mdata, chains = 3, iter = 1000)
+fb_ge <- stan("stan/bias.stan", data = mdata, chains = 3, iter = 1000)
 
 fb_ge
 
