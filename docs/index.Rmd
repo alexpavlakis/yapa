@@ -90,7 +90,6 @@ data_frame(
 
 ```{r over time}
 ec_ts <- read_csv("../results/ec_ts.csv")
-
 ec_ts %>%
   gather(metric, value, -date) %>%
   mutate(candidate = sapply(strsplit(metric, "_"), tail, 1),
@@ -122,7 +121,7 @@ ec_ts %>%
         axis.text.x = element_text(angle = 45, hjust = 1),
         axis.title.y = element_text(size = 9),
         plot.title = element_text(size = 16, color = "#007ba7", hjust = 0.5)) +
-  guides(col = F, fill = F)
+  guides(col = F, fill = F) 
 
 
 ```
@@ -234,7 +233,7 @@ ggplotly(map_plot) %>%
 ```
 
 
-```{r stateplot, results = TRUE, fig.height = 8, fig.align = 'center'}
+```{r stateplot, results = FALSE, fig.height = 8, fig.align = 'center'}
 lwd <- 1.1
 cex <- 1.2
 alpha <- 0.5
