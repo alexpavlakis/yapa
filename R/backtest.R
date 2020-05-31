@@ -131,7 +131,10 @@ model_data <- list(n_options = n_options,
                    state_id = state_id,
                    priors = priors,
                    days_out = days_out,
-                   decay_param = 60)
+                   mu_swing = swing,
+                   sigma_swing = swing_sigma,
+                   sd_swing_state = state_sigma,
+                   decay_param = 40)
 
 
 
