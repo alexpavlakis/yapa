@@ -66,7 +66,7 @@ process_rcp <- function(site, election_day = "2020-11-03", n = Inf) {
 # Return all state presidential election polls from 538 poll database
 process_538 <- function() {
   
-  fte <- read_csv("https://projects.fivethirtyeight.com/polls-page/president_polls.csv")
+  fte <- read_csv("https://projects.fivethirtyeight.com/polls-page/president_polls.csv") 
   
   dems <- fte %>% 
     count(answer) %>% 

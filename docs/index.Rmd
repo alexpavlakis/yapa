@@ -171,12 +171,15 @@ p_biden %>%
                          p_biden > 0.7 & p_biden < 0.9 ~ "Lean Biden",
                          p_biden <= 0.1 ~ "Likely Trump",
                          p_biden > 0.1 & p_biden < 0.3 ~ "Lean Trump", 
-                         TRUE ~ "Uncertain")) %>%
+                         TRUE ~ "Uncertain")) %>% 
+  left_join(prior_results %>% select(state, ev)) %>%
   group_by(cat) %>%
   arrange(-p_biden) %>%
-  mutate(rank = row_number()) %>%
+  mutate(rank = row_number(),
+         total_ev = sum(ev)) %>%
   ungroup() %>%
-  mutate(rank = max(rank) - rank,
+  mutate(cat = paste0(cat, "\n(", total_ev, ")"),
+         rank = max(rank) - rank,
          state = ifelse(state == 'District of Columbia', 'D.C.', state)) %>%
   ggplot() +
   aes(x = reorder(cat, -p_biden), y = rank, label = state, col = p_biden) +
@@ -204,7 +207,7 @@ map_data <- md %>%
               mutate(region = tolower(state))) %>%
   left_join(prior_results %>%
               select(state, ev)) %>%
-  mutate(state = paste0(state, " (", ev, ")")) %>%
+  mutate(state = paste0(state, "\nelectoral votes: ", ev)) %>%
   arrange(group, order) %>%
   select(state, lat, long, p_biden, group)
 
