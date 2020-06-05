@@ -338,18 +338,22 @@ for (s in p_biden$state) {
                       TRUE ~ paste0(round(ptrump*100, 0), "%"))
    pander::pandoc.header(s, level = 2)
    pander::pandoc.p('\n')
-   pander::pandoc.p(paste0('Biden is projected to receive between ',
+   pander::pandoc.p(paste0('Biden is projected to receive ',
                            round(100*state_ts$lower_biden[state_ts$state == s 
                            & state_ts$date == max(state_ts$date)], 0), '% and ',
                            round(100*state_ts$upper_biden[state_ts$state == s 
                            & state_ts$date == max(state_ts$date)], 0), 
-                           '% of the vote in ', s, '.  ',
+                           '% of the vote in ', s, '.  (average = ',
+                           round(100*state_ts$mean_biden[state_ts$state == s 
+                               & state_ts$date == max(state_ts$date)], 0), '%) ',
                            'Trump is projected to receive between ',
                            round(100*state_ts$lower_trump[state_ts$state == s 
                            & state_ts$date == max(state_ts$date)], 0), '% and ',
                            round(100*state_ts$upper_trump[state_ts$state == s 
                            & state_ts$date == max(state_ts$date)], 0), 
-                           '%.  Out of ', dim(state_simulations)[1]/(51*3), 
+                           '% (average = ', round(100*state_ts$mean_biden[state_ts$state == s 
+                               & state_ts$date == max(state_ts$date)], 0), '%) ',
+                           'Out of ', dim(state_simulations)[1]/(51*3), 
                            ' simulations of the election in ', s, 
                            ', Biden wins ', pwin, ' and Trump wins ', 
                            ptrump, '.'))
