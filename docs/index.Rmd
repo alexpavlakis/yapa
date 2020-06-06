@@ -277,12 +277,18 @@ DT::datatable(state_results, options = list(scrollX = TRUE,
 ```{r state-detail, results = TRUE}
 
 plot_state_ts <- function(s) {
-  p <- state_ts %>% 
+  plot_data <- state_ts %>% 
     filter(state == s) %>% select(-state) %>%
     gather(metric, value, -date) %>%
     mutate(candidate = sapply(strsplit(metric, "_"), tail, 1),
            metric = sapply(strsplit(metric, "_"), head, 1)) %>%
-    spread(metric, value) %>%
+    spread(metric, value)
+  current_rates <- state_ts %>% filter(state == s, date == max(date)) %>% select(mean_trump, mean_biden) %>% unlist()
+  if(abs(current_rates[1] - current_rates[2]) < 0.03) {
+    current_rates[current_rates == min(current_rates)] <-  min(current_rates) - 0.012
+    current_rates[current_rates == max(current_rates)] <- max(current_rates) + 0.012
+  }
+  p <- plot_data %>%
     ggplot() +
     aes(x = date, y = mean, ymin = lower, ymax = upper,
         col = candidate, fill = candidate) +
@@ -290,6 +296,9 @@ plot_state_ts <- function(s) {
                lty = 9, col = "blue", alpha = 0.7) +
     geom_hline(yintercept = prior_results$rep[prior_results$state == s],
                lty = 9, col = "red", alpha = 0.7) +
+  annotate("text", x = max(state_ts$date), current_rates,
+           label = paste0(round(current_rates*100), "%"),
+           hjust = 0, col = c("red", "blue"), size = 3.5) +
     geom_line(aes(group = candidate)) +
     geom_ribbon(col = NA, alpha = 0.3) +
     scale_x_date(limits = c(as.Date("2020-04-01"), as.Date("2020-11-10")),
@@ -338,25 +347,21 @@ for (s in p_biden$state) {
                       TRUE ~ paste0(round(ptrump*100, 0), "%"))
    pander::pandoc.header(s, level = 2)
    pander::pandoc.p('\n')
-   pander::pandoc.p(paste0('Biden is projected to receive ',
+   pander::pandoc.p(paste0('Biden is projected to receive **between ',
                            round(100*state_ts$lower_biden[state_ts$state == s 
                            & state_ts$date == max(state_ts$date)], 0), '% and ',
                            round(100*state_ts$upper_biden[state_ts$state == s 
                            & state_ts$date == max(state_ts$date)], 0), 
-                           '% of the vote in ', s, '  (average = ',
-                           round(100*state_ts$mean_biden[state_ts$state == s 
-                               & state_ts$date == max(state_ts$date)], 0), '%). ',
-                           'Trump is projected to receive between ',
+                           '%** of the vote in ', s, 
+                           '. Trump is projected to receive **between ',
                            round(100*state_ts$lower_trump[state_ts$state == s 
                            & state_ts$date == max(state_ts$date)], 0), '% and ',
                            round(100*state_ts$upper_trump[state_ts$state == s 
                            & state_ts$date == max(state_ts$date)], 0), 
-                           '% (average = ', round(100*state_ts$mean_biden[state_ts$state == s 
-                               & state_ts$date == max(state_ts$date)], 0), '%). ',
-                           'Out of ', dim(state_simulations)[1]/(51*3), 
+                           '%**.  Out of ', dim(state_simulations)[1]/(51*3), 
                            ' simulations of the election in ', s, 
-                           ', Biden wins ', pwin, ' and Trump wins ', 
-                           ptrump, '.'))
+                           ', Biden wins **', pwin, '** and Trump wins **', 
+                           ptrump, '**.  Dotted lines represent each party\'s vote share in the previous presidential election.'))
    plot_state_ts(s)
    pander::pandoc.p('\n')
 }
