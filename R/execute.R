@@ -17,10 +17,3 @@ setwd("..")
 print(Sys.time() - start)
 
 
-
-dates <- seq.Date(as.Date('2020-05-01'), Sys.Date(), by = 'day')
-for(d in 1:length(dates)) {
-  exec_date <- dates[d]
-  print(exec_date)
-  source("R/fit_general.R")
-}
