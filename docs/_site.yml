@@ -5,6 +5,7 @@ navbar:
   left:
   - text: "2020"
     href: index.html
+    google_analytics: "UA-168769307-1"
 #  - text: "vs 2016"
 #    href: vs_2016.html
   - text: "Methodology"
