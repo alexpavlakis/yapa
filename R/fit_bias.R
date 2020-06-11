@@ -71,7 +71,7 @@ get_bias_mat <- function(bias_data, yr) {
 # States ------------------------------------------------------------------
 
 
-d <- lapply(seq(2000, 2016, 4), get_bias_mat, bias_data = bias_data %>% filter(location != 'US'))
+d <- lapply(seq(2000, 2016, 4), get_bias_mat, bias_data = bias_data %>% filter(!location %in% c('US', 'M1', 'M2', 'N1', 'N2')))
 
 mdata <- list(
   n_states = nrow(d[[1]]),
@@ -80,7 +80,7 @@ mdata <- list(
   d2 = d[[2]],
   d3 = d[[3]],
   d4 = d[[4]],
-  d5 = d[[5]],
+  d5 = d[[5]]
 )
 
 # Model code to estimate distribution of errors in state and ge polls
