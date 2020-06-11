@@ -202,16 +202,20 @@ library(plotly)
 
 md <- map_data("state")
 
-map_data <- md %>%
+mapping_data <- md %>%
   left_join(p_biden %>%
               mutate(region = tolower(state))) %>%
   left_join(prior_results %>%
               select(state, ev)) %>%
+  left_join(data_frame(
+              state = state.name, 
+              abb = state.abb)) %>%
   mutate(state = paste0(state, "\nelectoral votes: ", ev)) %>%
   arrange(group, order) %>%
-  select(state, lat, long, p_biden, group)
+  select(state, lat, long, p_biden, group, abb)
 
-map_plot <- map_data %>%
+
+map_plot <- mapping_data %>%
   mutate(p_biden = ifelse(p_biden > 0.99, 0.99, p_biden),
          p_biden = ifelse(p_biden < 0.01, 0.01, p_biden),
          `p(biden)` = round(p_biden, 2)) %>%
@@ -226,7 +230,7 @@ map_plot <- map_data %>%
         axis.text = element_blank(),
         axis.ticks = element_blank(),
         axis.line = element_blank(),
-        panel.border = element_blank())
+        panel.border = element_blank()) 
 
 ggplotly(map_plot) %>% 
   config(displayModeBar = FALSE) %>% 
