@@ -1,0 +1,164 @@
+---
+title: "2016"
+output: 
+  html_document:
+    theme: cerulean
+    toc: true
+    toc_float: true
+    toc_depth: 4
+---
+<style type="text/css">
+body { 
+  font-size: 16px;
+}
+</style>
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = F, message = F, cache = F, fig.align = 'center')
+```
+
+
+```{r data}
+library(tidyverse)
+
+load("../results/state_results_16")
+load("../results/p_clinton")
+load("../results/ec_sims_16")
+load("../results/ppc16")
+
+actual_results <- read_csv("../data/state_results_16.csv")
+```
+
+# Model performance in 2016
+
+
+```{r topline-ec}
+clinton <- round(quantile(ec_sims_16[, 2], c(0.05, 0.95)))
+trump <- round(quantile(ec_sims_16[, 1], c(0.05, 0.95)))
+```
+
+From the perspective of November 6th, 2016, Yapa gave Hillary Clinton a **`r paste0(round(mean(ec_sims_16[, 2] > ec_sims_16[, 1])*100), "%")`** chance of winning a majority of electoral college votes, and Donald Trump a **`r paste0(round(mean(ec_sims_16[, 1] > ec_sims_16[, 2])*100), "%")`** chance of winning a majority of electoral college votes.  
+
+```{r ecplot, results = T}
+data_frame(
+  electoral_votes = c(ec_sims_16[, 1], ec_sims_16[, 2]),
+  candidate = c(rep("Trump", nrow(ec_sims_16)), rep("Clinton", nrow(ec_sims_16)))
+) %>% filter(electoral_votes != 268) %>%
+  ggplot() +
+  aes(x = electoral_votes, fill = candidate, y = ..density..) +
+  geom_histogram(alpha = 0.7, bins = 538,
+                 position = "identity") +
+  scale_x_continuous(limits = c(0, 538),
+                     breaks = c(seq(0, 538, 100), 270)) +
+  scale_fill_manual(values = c("blue", "red")) +
+  geom_vline(xintercept = 270, lty = 2, col = "darkgrey") +
+  theme_minimal() +
+  labs(x = "electoral college votes", y = NULL, fill = NULL, 
+       title = "distribution of potential electoral college outcomes") +
+  theme(legend.position = "bottom",
+        plot.title = element_text(size = 16, color = "#007ba7", hjust = 0.5),
+        plot.subtitle = element_text(hjust = .5, color = "#007ba7", size = 10),
+        strip.text = element_text(size = 15, hjust = .5,
+                                  color = "#007ba7"),
+        panel.grid.minor = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.x = element_text(color = 'grey35'),
+        axis.text.x = element_text(size = 11)) +
+  facet_wrap(~candidate, nrow = 2) +
+  guides(fill = F)
+
+```
+
+
+Yapa 'called' the results in all but four states correctly.  It predicted that Hillary Clinton would win Michigan by 4% (she lost by 0.2%), Pennsylvania by 2% (she lost by 0.7%), and Wisconsin by 6% (she lost by 1.2%); and it predicted that she would lose Nevada by 1% (she won by 2.4%).  In all other states, the candidate who Yapa had winning _on average_, won.
+
+```{r table}
+res_table <- state_results_16 %>% 
+  mutate(pred_winner = ifelse(`Mean Clinton` > `Mean Trump`, 'Clinton', 'Trump')) %>%
+  left_join(actual_results %>% rename(State = state)) %>%
+  mutate(actual_winner = ifelse(dem > rep, 'Clinton', 'Trump')) %>%
+  select(State, contains('Clinton'), `Result Clinton` = dem, 
+         contains('Trump'), `Result Trump` = rep, `Predicted Winner` = pred_winner,
+         `Actual Winner` = actual_winner) %>%
+  mutate_if(is.numeric, function(x) paste0(round(x*100), "%")) %>%
+  arrange(State)
+DT::datatable(res_table, options = list(scrollX = TRUE, 
+                                            scrollY = "200px",
+                                            pageLength = 51))
+```
+
+
+```{r map, fig.height = 5, fig.width = 8, fig.align = 'center'}
+library(maps)
+library(plotly)
+
+md <- map_data("state")
+
+mapping_data <- md %>%
+  left_join(p_clinton %>%
+              mutate(region = tolower(state))) %>%
+  left_join(actual_results %>%
+              select(state, ev)) %>%
+  left_join(data_frame(
+              state = state.name, 
+              abb = state.abb)) %>%
+  mutate(state = paste0(state, "\nelectoral votes: ", ev)) %>%
+  arrange(group, order) %>%
+  select(state, lat, long, p_clinton, group, abb)
+
+
+map_plot <- mapping_data %>%
+  mutate(p_clinton = ifelse(p_clinton > 0.99, 0.99, p_clinton),
+         p_clinton = ifelse(p_clinton < 0.01, 0.01, p_clinton),
+         `p(biden)` = round(p_clinton, 2)) %>%
+  ggplot() +
+  aes(x = long, y = lat, group = group, label = state, fill = `p(biden)`) +
+  geom_polygon(col = 'grey', lwd = 0.2, alpha = 0.75) +
+  scale_fill_gradient2(low = 'red', midpoint = 0.5, mid = 'purple', high = 'blue') +
+  guides(fill = F) +
+  labs(title = NULL, x = NULL, y = NULL) +
+  theme_void() +
+  theme(panel.grid = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        axis.line = element_blank(),
+        panel.border = element_blank()) 
+
+ggplotly(map_plot) %>% 
+  config(displayModeBar = FALSE) %>% 
+  layout(xaxis = list(fixedrange = TRUE),
+         yaxis = list(fixedrange = TRUE))
+
+```
+
+Yapa is well calibrated.  In 90% of states (46/50), the actual result was within the 90% uncertainty interval for that state.
+
+```{r ppc}
+# Plot
+ppc16 %>%
+  ggplot() +
+  aes(x = mean, y = dem, xmin = lower, xmax = upper, 
+      label = abb, col = dem) + 
+  geom_abline(intercept = 0, slope = 1, lty = 2, col = 'darkgrey') +
+  geom_point(alpha = 0.8, cex = 0.7) +  
+  geom_errorbarh(height = 0, alpha = 0.7, lwd = 0.4) +
+  scale_x_continuous(limits = c(0, 1),
+                     breaks = seq(0, 1, 0.25),
+                     labels = paste0(seq(0, 1, 0.25)*100, "%")) +
+  scale_y_continuous(limits = c(0, 1),
+                     breaks = seq(0, 1, 0.25),
+                     labels = paste0(seq(0, 1, 0.25)*100, "%")) +
+  scale_color_gradient(low = "red", high = "blue") +
+  guides(col = F) +
+  theme_minimal() +
+  labs(x = "prediction", y = "result",
+       title = "Model predictions and uncertainty intervals vs election results: 2016") +
+  theme(plot.title = element_text(size = 15, color = "#007ba7", hjust = 0.5),
+        axis.title = element_text(color = "#007ba7"),
+        axis.text = element_text(color = 'grey')) +
+  annotate("text", x = 0.2, y = 0.8, label = "Clinton beat prediction",
+           col = 'darkgrey') +
+  annotate("text", x = 0.8, y = 0.2, label = "Trump beat prediction",
+           col = 'darkgrey') 
+```

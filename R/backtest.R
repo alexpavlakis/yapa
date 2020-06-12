@@ -171,7 +171,7 @@ mu_trump <- data_frame(
   cand  = 'trump')
 
 # Formatted Table
-state_mu <- mu_clinton %>%
+state_results_16 <- mu_clinton %>%
   rename(`Lower Clinton` = lower,
          `Upper Clinton` = upper,
          `Mean Clinton`  = mean) %>%
@@ -184,33 +184,41 @@ state_mu <- mu_clinton %>%
   rename(State = state) %>%
   arrange(-`Mean Clinton`) 
 
-save(state_mu, file = "results/state_results_16")
+save(state_results_16, file = "results/state_results_16")
 
+# P-win --------------------------------------------------------------------
 
+# Probability of winning the state
+p_clinton <- round(apply(em$mu, 2, function(x) mean(x[, 2] > x[, 1])), 3)
+names(p_clinton) <- state
+p_clinton <- data.frame(p_clinton) %>%
+  tibble::rownames_to_column("state")
+
+save(p_clinton, file = "results/p_clinton")
 
 
 
 # Simulate electoral college ----------------------------------------------
 
-ec_sims <- matrix(0, nrow = dim(em$mu)[1], ncol = dim(em$mu)[3])
+ec_sims_16 <- matrix(0, nrow = dim(em$mu)[1], ncol = dim(em$mu)[3])
 
 # Simulate elections and mu
 for(s in 1:dim(em$mu)[2]) {
   for(o in 1:dim(em$mu)[3]) {
     for(i in 1:dim(em$mu)[1]) {
       if(em$mu[i, s, o] == max(em$mu[i, s, ])) {
-        ec_sims[i, o] <- ec_sims[i, o] + prior_results$ev[s]
+        ec_sims_16[i, o] <- ec_sims_16[i, o] + prior_results$ev[s]
       }
     }
   }
 }
 
-save(ec_sims, file = "results/ec_sims_16")
+save(ec_sims_16, file = "results/ec_sims_16")
 
 # Plot
 data_frame(
-  electoral_votes = c(ec_sims[, 1], ec_sims[, 2]),
-  candidate = c(rep("Trump", nrow(ec_sims)), rep("Clinton", nrow(ec_sims)))
+  electoral_votes = c(ec_sims_16[, 1], ec_sims_16[, 2]),
+  candidate = c(rep("Trump", nrow(ec_sims_16)), rep("Clinton", nrow(ec_sims_16)))
 ) %>% filter(electoral_votes != 268) %>%
   ggplot() +
   aes(x = electoral_votes, fill = candidate, y = ..density..) +
@@ -259,7 +267,7 @@ ppc16 %>%
   geom_abline(intercept = 0, slope = 1, lty = 2, col = 'darkgrey') +
   geom_point(alpha = 0.8, cex = 0.7) +  
   geom_errorbarh(height = 0, alpha = 0.7, lwd = 0.4) +
-  ggrepel::geom_text_repel(size = 3, lwd = 0.4) +
+  #ggrepel::geom_text_repel(size = 3, lwd = 0.4) +
   xlim(0, 1) + ylim(0, 1) + 
   scale_color_gradient(low = "red", high = "blue") +
   guides(col = F) +
@@ -267,13 +275,16 @@ ppc16 %>%
   labs(x = "prediction", y = "result",
        title = "Model predictions and uncertainty intervals vs election results: 2016") +
   theme(plot.title = element_text(size = 15, face = "bold")) +
-  annotate("text", x = 0.2, y = 0.8, label = "Clinton beat prediction") +
-  annotate("text", x = 0.8, y = 0.2, label = "Trump beat prediction")
+  annotate("text", x = 0.2, y = 0.8, label = "Clinton beat prediction",
+           col = 'darkgrey') +
+  annotate("text", x = 0.8, y = 0.2, label = "Trump beat prediction",
+           col = 'darkgrey')
 
 # Table
 ppc16 %>%
   select(state, `lower prediction` = lower,
          prediction = mean, `upper prediction` = upper, 
          result = dem) %>%
+  mutate(miss = (result - prediction)) %>% 
   mutate_if(is.numeric, function(x) paste0(round(x*100, 1), "%"))
 
