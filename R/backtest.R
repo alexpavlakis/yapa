@@ -122,6 +122,12 @@ n_options <- ncol(y)
 # Days out from election (for weighting)
 days_out <- polls$days_out
 
+# load historical bias data
+## These are calculated in R/fit_bias.R
+load("data/swing_16") 
+load("data/swing_sigma_16")
+load("data/state_sigma_16")
+
 # Combine into list
 model_data <- list(n_options = n_options, 
                    n_states = n_states, 
@@ -131,9 +137,9 @@ model_data <- list(n_options = n_options,
                    state_id = state_id,
                    priors = priors,
                    days_out = days_out,
-                   mu_swing = swing,
-                   sigma_swing = swing_sigma,
-                   sd_swing_state = state_sigma,
+                   mu_swing = swing_16,
+                   sigma_swing = swing_sigma_16,
+                   sd_swing_state = state_sigma_16,
                    decay_param = 40)
 
 
@@ -170,6 +176,7 @@ mu_trump <- data_frame(
   upper = quantiles_trump[2, ],
   cand  = 'trump')
 
+
 # Formatted Table
 state_results_16 <- mu_clinton %>%
   rename(`Lower Clinton` = lower,
@@ -183,6 +190,18 @@ state_results_16 <- mu_clinton %>%
               select(-cand)) %>%
   rename(State = state) %>%
   arrange(-`Mean Clinton`) 
+
+
+res_table <- state_results_16 %>% 
+  mutate(pred_winner = ifelse(`Mean Clinton` > `Mean Trump`, 'Clinton', 'Trump')) %>%
+  left_join(actual_results %>% rename(State = state)) %>%
+  mutate(actual_winner = ifelse(dem > rep, 'Clinton', 'Trump')) %>%
+  select(State, contains('Clinton'), `Result Clinton` = dem, 
+         contains('Trump'), `Result Trump` = rep, `Predicted Winner` = pred_winner,
+         `Actual Winner` = actual_winner) 
+accuracy <- mean(res_table$`Predicted Winner` == res_table$`Actual Winner`)
+
+accuracy
 
 save(state_results_16, file = "results/state_results_16")
 
@@ -249,7 +268,7 @@ sdf <- data.frame(abb = c(state.abb, "DC"),
 
 # Join predictions with actual results
 ppc16 <- read_csv("data/state_results_16.csv") %>% 
-  left_join(state_mu %>% rename(state = State)) %>% 
+  left_join(state_results_16 %>% rename(state = State)) %>% 
   select(dem, mean = `Mean Clinton`, lower = `Lower Clinton`, 
          upper = `Upper Clinton`, state) %>%
   left_join(sdf)

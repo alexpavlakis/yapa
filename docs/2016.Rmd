@@ -3,9 +3,6 @@ title: "2016"
 output: 
   html_document:
     theme: cerulean
-    toc: true
-    toc_float: true
-    toc_depth: 4
 ---
 <style type="text/css">
 body { 
@@ -38,7 +35,7 @@ clinton <- round(quantile(ec_sims_16[, 2], c(0.05, 0.95)))
 trump <- round(quantile(ec_sims_16[, 1], c(0.05, 0.95)))
 ```
 
-From the perspective of November 6th, 2016, Yapa gave Hillary Clinton a **`r paste0(round(mean(ec_sims_16[, 2] > ec_sims_16[, 1])*100), "%")`** chance of winning a majority of electoral college votes, and Donald Trump a **`r paste0(round(mean(ec_sims_16[, 1] > ec_sims_16[, 2])*100), "%")`** chance of winning a majority of electoral college votes.  
+From the perspective of November 6th, 2016, Yapa gave Hillary Clinton a **`r paste0(round(mean(ec_sims_16[, 2] > ec_sims_16[, 1])*100), "%")`** chance of winning a majority of electoral college votes, and Donald Trump a **`r paste0(round(mean(ec_sims_16[, 1] > ec_sims_16[, 2])*100), "%")`** chance of winning a majority of electoral college votes.  Yapa aggregated 329 polls from 46 states in 2016 pulled from realclearpolitics.  Its predictions for 5 states (AL, DC, HI, ND, and WY) were pure prior.
 
 ```{r ecplot, results = T}
 data_frame(
@@ -71,8 +68,6 @@ data_frame(
 ```
 
 
-Yapa 'called' the results in all but four states correctly.  It predicted that Hillary Clinton would win Michigan by 4% (she lost by 0.2%), Pennsylvania by 2% (she lost by 0.7%), and Wisconsin by 6% (she lost by 1.2%); and it predicted that she would lose Nevada by 1% (she won by 2.4%).  In all other states, the candidate who Yapa had winning _on average_, won.
-
 ```{r table}
 res_table <- state_results_16 %>% 
   mutate(pred_winner = ifelse(`Mean Clinton` > `Mean Trump`, 'Clinton', 'Trump')) %>%
@@ -83,6 +78,15 @@ res_table <- state_results_16 %>%
          `Actual Winner` = actual_winner) %>%
   mutate_if(is.numeric, function(x) paste0(round(x*100), "%")) %>%
   arrange(State)
+
+calib <- mean(ppc16$dem > ppc16$lower & ppc16$dem < ppc16$upper)
+```
+
+
+Yapa 'called' the results in all but three states correctly.  It predicted that Hillary Clinton would win Michigan by 3% (she lost by 0.2%), Pennsylvania by 3% (she lost by 0.7%), and Wisconsin by 6% (she lost by 1.2%).  In all other states, the candidate who Yapa had winning _on average_, won.
+
+
+```{r showtable}
 DT::datatable(res_table, options = list(scrollX = TRUE, 
                                             scrollY = "200px",
                                             pageLength = 51))
@@ -132,7 +136,7 @@ ggplotly(map_plot) %>%
 
 ```
 
-Yapa is well calibrated.  In 90% of states (46/50), the actual result was within the 90% uncertainty interval for that state.
+Yapa is well calibrated.  In `r paste0(round(calib*100), '%')` of states (`r paste0(round(calib*50))`/51), the actual result was within the 90% uncertainty interval for that state.
 
 ```{r ppc}
 # Plot
@@ -162,3 +166,4 @@ ppc16 %>%
   annotate("text", x = 0.8, y = 0.2, label = "Trump beat prediction",
            col = 'darkgrey') 
 ```
+
