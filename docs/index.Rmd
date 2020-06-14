@@ -304,7 +304,7 @@ plot_state_ts <- function(s) {
            label = paste0(round(current_rates*100), "%"),
            hjust = 0, col = c("red", "blue"), size = 3.5) +
     geom_line(aes(group = candidate)) +
-    geom_ribbon(col = NA, alpha = 0.3) +
+    geom_ribbon(col = NA, alpha = 0.2) +
     scale_x_date(limits = c(as.Date("2020-04-01"), as.Date("2020-11-10")),
                  date_breaks = "1 month",
                  date_labels =  "%b, %Y") +

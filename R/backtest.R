@@ -110,6 +110,13 @@ priors <- prior_results %>%
   select(rep, dem, other) %>%
   as.matrix()
 
+#  National poll average in 2016 - national results in 2012 for adjusting priors
+adj <- c(0.440, 0.475, 0.085) - c(0.472, 0.511, 0.017)
+
+priors <- t(apply(priors, 1, function(x) x + adj))
+priors <- apply(priors, 2, function(x) ifelse(x > 1, 1, x))
+priors <- apply(priors, 2, function(x) ifelse(x < 0, 0, x))
+
 # Numeric identifier for each state
 state_id <- match(polls$state, unique(polls$state))
 

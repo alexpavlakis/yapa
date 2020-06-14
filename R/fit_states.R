@@ -48,7 +48,6 @@ priors <- prior_results %>%
   select(rep, dem, other) %>%
   as.matrix()
 
-prior_sd <- pred_sds[, c(3, 1, 2)]
 # Divide state results in 2016 by national results
 ## multiplied by 2020 national polling average 
 ## to create adjusted state priors.

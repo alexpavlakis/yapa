@@ -83,7 +83,7 @@ calib <- mean(ppc16$dem > ppc16$lower & ppc16$dem < ppc16$upper)
 ```
 
 
-Yapa 'called' the results in all but three states correctly.  It predicted that Hillary Clinton would win Michigan by 3% (she lost by 0.2%), Pennsylvania by 3% (she lost by 0.7%), and Wisconsin by 6% (she lost by 1.2%).  In all other states, the candidate who Yapa had winning _on average_, won.
+Yapa 'called' the results in all but three states correctly.  It predicted that Hillary Clinton would win Michigan by 4% (she lost by 0.2%), Pennsylvania by 2% (she lost by 0.7%), and Wisconsin by 7% (she lost by 1.2%).  In all other states, the candidate who Yapa had winning _on average_, won.
 
 
 ```{r showtable}
@@ -115,9 +115,9 @@ mapping_data <- md %>%
 map_plot <- mapping_data %>%
   mutate(p_clinton = ifelse(p_clinton > 0.99, 0.99, p_clinton),
          p_clinton = ifelse(p_clinton < 0.01, 0.01, p_clinton),
-         `p(biden)` = round(p_clinton, 2)) %>%
+         `p(clinton)` = round(p_clinton, 2)) %>%
   ggplot() +
-  aes(x = long, y = lat, group = group, label = state, fill = `p(biden)`) +
+  aes(x = long, y = lat, group = group, label = state, fill = `p(clinton)`) +
   geom_polygon(col = 'grey', lwd = 0.2, alpha = 0.75) +
   scale_fill_gradient2(low = 'red', midpoint = 0.5, mid = 'purple', high = 'blue') +
   guides(fill = F) +

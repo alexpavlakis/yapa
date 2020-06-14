@@ -5,7 +5,7 @@ data {
   vector[n_options] d2[n_states];
   vector[n_options] d3[n_states];
   vector[n_options] d4[n_states];
-  //vector[n_options] d5[n_states];
+  vector[n_options] d5[n_states];
 }
 parameters {
   vector[n_options] mu;
@@ -26,14 +26,14 @@ model {
   d2 ~ multi_normal(mu, Sigma);
   d3 ~ multi_normal(mu, Sigma);
   d4 ~ multi_normal(mu, Sigma);
-  //d5 ~ multi_normal(mu, Sigma);
+  d5 ~ multi_normal(mu, Sigma);
   for(o in 1:n_options) {
     for(s in 1:n_states) {
       d1[s][o] ~ normal(mu[o], sigma[s, o]);
       d2[s][o] ~ normal(mu[o], sigma[s, o]);
       d3[s][o] ~ normal(mu[o], sigma[s, o]);
       d4[s][o] ~ normal(mu[o], sigma[s, o]);
-      //d5[s][o] ~ normal(mu[o], sigma[s, o]);
+      d5[s][o] ~ normal(mu[o], sigma[s, o]);
       sigma[s, o] ~ normal(0, 0.1);
     }
   }
