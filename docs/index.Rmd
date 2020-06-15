@@ -104,7 +104,7 @@ ec_ts %>%
   geom_hline(yintercept = 304, lty = 9, col = "red", alpha = 0.7) +
   geom_hline(yintercept = 227, lty = 9, col = "blue", alpha = 0.7) +
   geom_line() +
-  geom_ribbon(col = NA, alpha = 0.3) +
+  geom_ribbon(col = NA, alpha = 0.2) +
   scale_x_date(limits = c(as.Date("2020-04-01"), as.Date("2020-11-10")),
                date_breaks = "1 month",
                date_labels =  "%b, %Y") +
@@ -128,7 +128,7 @@ ec_ts %>%
 
 # Who will win the popular vote?
 
-Biden is projected to win **between `r popular_vote$lower[popular_vote$candidate == 'biden']` and `r  popular_vote$upper[popular_vote$candidate == 'biden']`** of the national popular vote.  Trump is projected to win **between `r popular_vote$lower[popular_vote$candidate == 'trump']` and `r  popular_vote$upper[popular_vote$candidate == 'trump']`** of the national popular vote.  In `r dim(pv_sims)[1]` simulations of the popular vote from the perspective of `r gsub(" 0", " ", format(Sys.Date(), format="%B %d, %Y"))`, Biden wins **`r paste0(round(mean(pv_sims[, 2] > pv_sims[, 1])*100), "%")`** and Trump wins **`r paste0(round(mean(pv_sims[, 1] > pv_sims[, 2])*100), "%")`**.
+Biden is projected to win **between `r popular_vote$lower[popular_vote$candidate == 'biden']` and `r  popular_vote$upper[popular_vote$candidate == 'biden']`** of the national popular vote.  Trump is projected to win **between `r popular_vote$lower[popular_vote$candidate == 'trump']` and `r  popular_vote$upper[popular_vote$candidate == 'trump']`** of the national popular vote.  In `r dim(pv_sims)[1]` simulations of the popular vote from the perspective of `r gsub(" 0", " ", format(Sys.Date(), format="%B %d, %Y"))`, Biden wins **`r paste0(round(mean(pv_sims[, 2] > pv_sims[, 1])*100), "%")`** and Trump wins **`r paste0(round(mean(pv_sims[, 1] > pv_sims[, 2])*100), "%")`**.  Dotted lines represent each party's vote share in the previous presidential election.
 
 
 
@@ -141,11 +141,11 @@ ge_trend %>%
   geom_hline(yintercept = 0.461, lty = 9, col = "red", alpha = 0.7) +
   geom_hline(yintercept = 0.482, lty = 9, col = "blue", alpha = 0.7) +
   geom_line() +
-  geom_ribbon(col = NA, alpha = 0.3) +
+  geom_ribbon(col = NA, alpha = 0.2) +
   scale_color_manual(values = c("blue", "darkgrey", "red")) +
   scale_fill_manual(values = c("blue", "darkgrey", "red")) +
   theme_minimal() +
-  scale_x_date(limits = c(as.Date("2019-12-20"), as.Date("2020-11-03")),
+  scale_x_date(limits = c(as.Date('2020-04-01'), as.Date("2020-11-03")),
                date_breaks = "1 months",
                date_labels = "%b, %Y") +
   scale_y_continuous(limits = c(0, 0.7),
@@ -245,7 +245,7 @@ lwd <- 1.1
 cex <- 1.2
 alpha <- 0.5
 
-results_biden %>%
+stateplot <- results_biden %>%
   ggplot() +
   aes(x = mean, y = reorder(state, mean),
       xmin = lower, xmax = upper) +
@@ -365,7 +365,7 @@ for (s in p_biden$state) {
                            '%**.  Out of ', dim(state_simulations)[1]/(51*3), 
                            ' simulations of the election in ', s, 
                            ', Biden wins **', pwin, '** and Trump wins **', 
-                           ptrump, '**.  Dotted lines represent each party\'s vote share in the previous presidential election.'))
+                           ptrump, '**.'))
    plot_state_ts(s)
    pander::pandoc.p('\n')
 }

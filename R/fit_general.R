@@ -79,3 +79,6 @@ save(ge_trend, file = "results/ge_trend")
 
 pv_sims <- efge$mu
 save(pv_sims, file = "results/pv_sims")
+
+# Poll average
+ge_polling_average <- apply(efge$theta, 2, mean)
