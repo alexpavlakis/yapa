@@ -89,6 +89,7 @@ process_538 <- function() {
     mutate(end_date = as.Date(end_date,  "%m/%d/%y"),
            days_out = as.Date("2020-11-03") - end_date) %>%
     filter(office_type == "U.S. President", !is.na(state)) %>%
+    filter(end_date > '2020-03-01') %>%
     group_by(question_id, poll_id) %>%
     mutate(pops = n_distinct(population)) %>% 
     filter(all(answer %in% c("Biden", "Trump", "Other"))) %>%
@@ -131,6 +132,7 @@ process_538_ge <- function() {
     filter(stage == "general", office_type == "U.S. President", is.na(state)) %>%
     mutate(end_date = as.Date(end_date,  "%m/%d/%y"),
            days_out = as.Date("2020-11-03") - end_date) %>%
+    filter(end_date > '2020-03-01') %>%
     group_by(question_id, poll_id) %>%
     mutate(pops = n_distinct(population)) %>% 
     filter(all(answer %in% c("Biden", "Trump", "Other"))) %>%
