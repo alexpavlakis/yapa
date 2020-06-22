@@ -86,12 +86,12 @@ process_538 <- function() {
   
   polls <- fte %>%
     right_join(pops) %>%
+    filter(population != 'a') %>%
     mutate(end_date = as.Date(end_date,  "%m/%d/%y"),
            days_out = as.Date("2020-11-03") - end_date) %>%
     filter(office_type == "U.S. President", !is.na(state)) %>%
     filter(end_date > '2020-03-01') %>%
     group_by(question_id, poll_id) %>%
-    mutate(pops = n_distinct(population)) %>% 
     filter(all(answer %in% c("Biden", "Trump", "Other"))) %>%
     ungroup() %>% 
     select(poll_id, question_id, answer, state, pct, sample_size, days_out, end_date) %>% 
@@ -129,12 +129,12 @@ process_538_ge <- function() {
 
   general_election <- fte %>%
     right_join(pops) %>%
+    filter(population != 'a') %>%
     filter(stage == "general", office_type == "U.S. President", is.na(state)) %>%
     mutate(end_date = as.Date(end_date,  "%m/%d/%y"),
            days_out = as.Date("2020-11-03") - end_date) %>%
     filter(end_date > '2020-03-01') %>%
     group_by(question_id, poll_id) %>%
-    mutate(pops = n_distinct(population)) %>% 
     filter(all(answer %in% c("Biden", "Trump", "Other"))) %>%
     ungroup() %>% 
     select(poll_id, question_id, answer, pct, sample_size, days_out, end_date) %>% 
