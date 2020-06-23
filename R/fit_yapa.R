@@ -33,6 +33,13 @@ polls_state <- data_frame(state) %>%
 polls_natl <- process_538_ge() %>%
   filter(end_date <= exec_date) 
 
+# Save
+polls <- polls_natl %>%
+  mutate(state = 'US') %>% 
+  rbind(polls_state)
+
+write_csv(polls, "data/polls.csv")
+
 load("data/swing") 
 load("data/swing_sigma")
 load("data/state_sigma")
