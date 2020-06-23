@@ -108,7 +108,7 @@ model_data <- list(n_options = n_options,
 # Fit model ---------------------------------------------------------------
 
 start <- Sys.time()
-m <- stan(file = "stan/poll_average.stan", data = model_data, verbose = FALSE,
+m <- stan(file = "stan/yapa_model.stan", data = model_data, verbose = FALSE,
           chains = 10, iter = 5000)
 print(Sys.time() - start)
 

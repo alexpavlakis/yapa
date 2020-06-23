@@ -275,9 +275,6 @@ $(document).ready(function () {
   <a href="index.html">2020</a>
 </li>
 <li>
-  <a href="2016.html">2016</a>
-</li>
-<li>
   <a href="yapa.html">Methodology</a>
 </li>
       </ul>
@@ -309,17 +306,23 @@ body {
 <h1>Model</h1>
 <p>Yapa models support for each presidential candidate with three layers:</p>
 <ol style="list-style-type: decimal">
-<li><strong>Prior</strong>: the results in each state from the previous general election, adjusted by swings between previous national election results and current national polls;</li>
+<li><strong>Prior</strong>: the results from the previous general election at the state and national level, and parameters for the distribution of state and national polling misses from the previous five presidential elections;</li>
 <li><strong>Data</strong>: state-level and national polls, weighted by recency and sample size;</li>
 <li><strong>Non-sampling error</strong>: systematic polling error based on its historical distribution.</li>
 </ol>
-<p>Specifically, the number of respondents that support each candidate in each poll <span class="math inline">\(y_{p, c}\)</span> is drawn from the total respondents in that poll <span class="math inline">\(n_p\)</span> at a candidate and state specific polling average <span class="math inline">\(\theta_{s, c}\)</span>. The polling averages follow a normal model centered on previous election results for each candidate in each state, adjusted by trends in current national polls <span class="math inline">\(\alpha_{s, c}\)</span>. In the absence of state level polling, <span class="math inline">\(\alpha\)</span> stands in as the best available estimate. The election outcome <span class="math inline">\(\mu_{s, c}\)</span> is simulated from a distribution centered at the estimated polling average for each candidate in each state, with a candidate specific national swing <span class="math inline">\(\epsilon_{c}\)</span> and state specific deviation <span class="math inline">\(\sigma_{s}\)</span>. <span class="math inline">\(\epsilon\)</span> is estimated from historic swings in the previous three elections, taking careful account for correlations across candidates. If a candidate outperforms the polls, another usually underperforms; and if a candidate outperforms in one state, they are likely to outperform in other states too. <span class="math inline">\(\sigma\)</span> is estimated from historical polling errors in each state.</p>
+<p>Specifically, the number of respondents that support each candidate in each poll <span class="math inline">\(y_{p, c}\)</span> is drawn from the total respondents in that poll <span class="math inline">\(n_p\)</span> at a candidate and state (S) or national (N) specific polling average <span class="math inline">\(\theta_{s, c}\)</span>. The polling averages follow a normal model centered on the national average for each candidate plus the lean for each candidate in each state. In the absence of state level polling, the national average plus the state lean stands in as the best available estimate.</p>
 <p><span class="math display">\[
 \begin{align}
-y_{p, c} &amp;\sim Binomial(n_p, \theta_{s, c}) \\
-\theta_{s, c} &amp;\sim Normal(\alpha_{s, c}, \tau) \\
-\mu_{s, c} &amp;\sim Normal(\theta_{s, c} + \epsilon_{c}, \sigma_{s}) \\
-\epsilon_{c} &amp;\sim MultiNormal(M, \Sigma) 
+y_{p, c} &amp;\sim Binomial(n_p, \theta^S_{s, c}) \\
+\theta^S_{s, c} &amp;\sim Normal(\theta^N_c + \pi_{s,c}, \tau) \\
+\pi_{s, c} &amp;\sim Normal(\beta_c\times p_{s, c}) \\
+\end{align}
+\]</span></p>
+<p>To simulate outcomes, we first estimate the distribution of “misses” for each candidate at the state and national level, based on the last five presidential elections. Since state poll misses tend to be correlated, we first sample a national miss, then sample results for each state based on the national miss and state-specific errors.</p>
+<p><span class="math display">\[
+\begin{align}
+\mu_{s, c} &amp;\sim Normal(\theta^S_{s, c} + \epsilon_c, \sigma_s) \\
+\epsilon &amp;\sim MultiNormal(M, \Sigma)
 \end{align}
 \]</span></p>
 <p>All code and data are available at <a href="https://github.com/alexpavlakis/yapa">github.com/alexpavlakis/yapa</a>. Polls are pulled from <a href="https://projects.fivethirtyeight.com/polls">538</a> and <a href="https://www.realclearpolitics.com/epolls/latest_polls/">RealClearPolitics</a>.</p>

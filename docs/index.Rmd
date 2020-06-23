@@ -183,8 +183,7 @@ p_biden %>%
          state = ifelse(state == 'District of Columbia', 'D.C.', state)) %>%
   ggplot() +
   aes(x = reorder(cat, -p_biden), y = rank, label = state, col = p_biden) +
-  geom_text() +
-  geom_text(alpha = 0.8, size = 4, face = 'bold') +
+  geom_text(alpha = 0.8, size = 5, face = 'bold') +
   scale_x_discrete(position = "top") +
   theme_void() +
   theme(axis.text.x = element_text(size = 15, color = "#007ba7"),

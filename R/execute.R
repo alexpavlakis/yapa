@@ -3,15 +3,12 @@ exec_date <- Sys.Date()
 
 start <- Sys.time()
 
-# Simulate geenral election results
-source("R/fit_general.R")
-
-# Simulate state-level results
-source("R/fit_states.R")
+source("R/fit_yapa.R")
 
 # Render site
 setwd("docs")
 rmarkdown::render_site()
+rmarkdown::render("index.Rmd")
 setwd("..")
 
 print(Sys.time() - start)

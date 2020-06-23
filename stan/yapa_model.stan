@@ -17,17 +17,17 @@ data {
   int n_states;           // number of states 
   int n_options;          // number of candidates
   int state_id[N];        // state identifier
-  matrix[N, n_options] y; // matrix of counts for each candidate in each poll
+  matrix[N, n_options] y; // matrix of counts for each candidate in each state poll
   matrix[N_natl, n_options] y_natl; 
   vector[N] days_out;     // days until election (for weighting)
   vector[N_natl] days_out_natl;     
-  matrix[n_states, n_options] p_lean; // partisan lean for each state
-  real<lower = 0> decay_param;
-  vector[n_options] mu_swing;
-  matrix[n_options, n_options] sigma_swing;
-  matrix[n_states, n_options] sd_swing_state;
-  vector[n_options] mu_swing_ge;
-  matrix[n_options, n_options] sigma_swing_ge;
+  matrix[n_states, n_options] p_lean; // prior partisan lean in each state
+  real<lower = 0> decay_param;  // parameter for exponential decay weighting
+  vector[n_options] mu_swing;   // average state poll miss
+  matrix[n_options, n_options] sigma_swing; // covariance matrix for state poll miss
+  matrix[n_states, n_options] sd_swing_state; // variance in miss for each state
+  vector[n_options] mu_swing_ge; // average national poll miss
+  matrix[n_options, n_options] sigma_swing_ge; // covariance matrix for national poll miss
 }
 transformed data {
   // Weight each poll by recency, according to exp decay model
@@ -50,12 +50,11 @@ transformed data {
 }
 parameters {
   simplex[n_options] theta[n_states]; // simplex of simulated poll averages
-  simplex[n_options] theta_natl;              
-  //vector<lower = 0>[n_options] tau;
-  vector[n_options] beta;
+  simplex[n_options] theta_natl;       
+  vector[n_options] beta; // parameter for change in national lean
 }
 transformed parameters {
-  matrix[n_states, n_options] pi;
+  matrix[n_states, n_options] pi; // partisan lean of each state (relative to natl poll)
   for(o in 1:n_options) {
     for(s in 1:n_states) {
       pi[s, o] = beta[o]*p_lean[s, o];
@@ -79,10 +78,9 @@ model {
     }
   }
   beta ~ normal(1, 0.1);
-  //tau ~ normal(0, 1);
   theta_natl[1] ~ normal(0.46, 0.1);
   theta_natl[2] ~ normal(0.48, 0.1);
-  theta_natl[3] ~ normal(0.1, 0.1);
+  theta_natl[3] ~ normal(0.06, 0.1);
 }
 generated quantities {
   // Simulate election results from poll averages by:

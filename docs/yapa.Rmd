@@ -27,20 +27,29 @@ Once it has estimated poll averages, Yapa then runs tens of thousands of simulat
 
 Yapa models support for each presidential candidate with three layers:
 
-1) **Prior**: the results in each state from the previous general election, adjusted by swings between previous national election results and current national polls;
+1) **Prior**: the results from the previous general election at the state and national level, and parameters for the distribution of state and national polling misses from the previous five presidential elections;
 2) **Data**: state-level and national polls, weighted by recency and sample size;
 3) **Non-sampling error**: systematic polling error based on its historical distribution.
 
-Specifically, the number of respondents that support each candidate in each poll $y_{p, c}$ is drawn from the total respondents in that poll $n_p$ at a candidate and state specific polling average $\theta_{s, c}$.  The polling averages follow a normal model centered on previous election results for each candidate in each state, adjusted by trends in current national polls $\alpha_{s, c}$.  In the absence of state level polling, $\alpha$ stands in as the best available estimate. The election outcome $\mu_{s, c}$ is simulated from a distribution centered at the estimated polling average for each candidate in each state, with a candidate specific national swing $\epsilon_{c}$ and state specific deviation $\sigma_{s}$.  $\epsilon$ is estimated from historic swings in the previous three elections, taking careful account for correlations across candidates.  If a candidate outperforms the polls, another usually underperforms; and if a candidate outperforms in one state, they are likely to outperform in other states too. $\sigma$ is estimated from historical polling errors in each state.
+Specifically, the number of respondents that support each candidate in each poll $y_{p, c}$ is drawn from the total respondents in that poll $n_p$ at a candidate and state (S) or national (N) specific polling average $\theta_{s, c}$.  The polling averages follow a normal model centered on the national average for each candidate plus the lean for each candidate in each state.  In the absence of state level polling, the national average plus the state lean stands in as the best available estimate. 
 
 $$
 \begin{align}
-y_{p, c} &\sim Binomial(n_p, \theta_{s, c}) \\
-\theta_{s, c} &\sim Normal(\alpha_{s, c}, \tau) \\
-\mu_{s, c} &\sim Normal(\theta_{s, c} + \epsilon_{c}, \sigma_{s}) \\
-\epsilon_{c} &\sim MultiNormal(M, \Sigma) 
+y_{p, c} &\sim Binomial(n_p, \theta^S_{s, c}) \\
+\theta^S_{s, c} &\sim Normal(\theta^N_c + \pi_{s,c}, \tau) \\
+\pi_{s, c} &\sim Normal(\beta_c\times p_{s, c}) \\
 \end{align}
 $$
+
+To simulate outcomes, we first estimate the distribution of "misses" for each candidate at the state and national level, based on the last five presidential elections.  Since state poll misses tend to be correlated, we first sample a national miss, then sample results for each state based on the national miss and state-specific errors.
+
+$$
+\begin{align}
+\mu_{s, c} &\sim Normal(\theta^S_{s, c} + \epsilon_c, \sigma_s) \\
+\epsilon &\sim MultiNormal(M, \Sigma)
+\end{align}
+$$
+
 
 All code and data are available at [github.com/alexpavlakis/yapa](https://github.com/alexpavlakis/yapa).  Polls are pulled from [538](https://projects.fivethirtyeight.com/polls) and [RealClearPolitics](https://www.realclearpolitics.com/epolls/latest_polls/).
 
