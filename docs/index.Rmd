@@ -287,9 +287,10 @@ plot_state_ts <- function(s) {
            metric = sapply(strsplit(metric, "_"), head, 1)) %>%
     spread(metric, value)
   current_rates <- state_ts %>% filter(state == s, date == max(date)) %>% select(mean_trump, mean_biden) %>% unlist()
-  if(abs(current_rates[1] - current_rates[2]) < 0.03) {
-    current_rates[current_rates == min(current_rates)] <-  min(current_rates) - 0.012
-    current_rates[current_rates == max(current_rates)] <- max(current_rates) + 0.012
+  current_rates_pos <- state_ts %>% filter(state == s, date == max(date)) %>% select(mean_trump, mean_biden) %>% unlist()
+  if(abs(current_rates_pos[1] - current_rates_pos[2]) < 0.03) {
+    current_rates_pos[current_rates_pos == min(current_rates_pos)] <-  min(current_rates_pos) - 0.012
+    current_rates_pos[current_rates_pos == max(current_rates_pos)] <- max(current_rates_pos) + 0.012
   }
   p <- plot_data %>%
     ggplot() +
@@ -299,7 +300,7 @@ plot_state_ts <- function(s) {
                lty = 9, col = "blue", alpha = 0.7) +
     geom_hline(yintercept = prior_results$rep[prior_results$state == s],
                lty = 9, col = "red", alpha = 0.7) +
-  annotate("text", x = max(state_ts$date), current_rates,
+  annotate("text", x = max(state_ts$date), y = current_rates_pos,
            label = paste0(round(current_rates*100), "%"),
            hjust = 0, col = c("red", "blue"), size = 3.5) +
     geom_line(aes(group = candidate)) +
