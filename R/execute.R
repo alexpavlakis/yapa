@@ -7,7 +7,7 @@ source("R/fit_yapa.R")
 
 # Render site
 setwd("docs")
-rmarkdown::render_site()
+#rmarkdown::render_site()
 rmarkdown::render("index.Rmd")
 setwd("..")
 
