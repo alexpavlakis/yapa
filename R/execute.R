@@ -14,3 +14,4 @@ setwd("..")
 print(Sys.time() - start)
 
 system("open docs/index.html")
+

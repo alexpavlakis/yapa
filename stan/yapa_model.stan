@@ -57,7 +57,7 @@ transformed parameters {
   matrix[n_states, n_options] pi; // partisan lean of each state (relative to natl poll)
   for(o in 1:n_options) {
     for(s in 1:n_states) {
-      pi[s, o] = beta[o]*p_lean[s, o];
+      pi[s, o] = beta[o] + p_lean[s, o];
     }
   }
 }
@@ -77,7 +77,7 @@ model {
       theta[s][o] ~ normal(theta_natl[o] + p_lean[s, o], 0.1);
     }
   }
-  beta ~ normal(1, 0.1);
+  beta ~ normal(0, 0.1);
   theta_natl[1] ~ normal(0.46, 0.1);
   theta_natl[2] ~ normal(0.48, 0.1);
   theta_natl[3] ~ normal(0.06, 0.1);
