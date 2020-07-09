@@ -15,3 +15,12 @@ print(Sys.time() - start)
 
 system("open docs/index.html")
 
+
+
+dates <- seq.Date(as.Date("2020-06-25"), Sys.Date(), by = 'day')
+
+for(i in 1:length(dates)) {
+  exec_date <- dates[i]
+  print(exec_date)
+  source("R/fit_yapa.R")
+}

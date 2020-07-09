@@ -148,3 +148,86 @@ process_538_ge <- function() {
   
   general_election
 }
+
+
+
+
+
+
+# Return all house generic ballot polls
+
+process_538_gb <- function() {
+  
+  gbp <- read_csv("https://projects.fivethirtyeight.com/polls-page/generic_ballot_polls.csv")
+  
+  # Prefer LV then RV then V then A
+  pops <- gbp %>%
+    count(poll_id, population) %>%
+    left_join(
+      data_frame(population = c("lv", "rv", "v", "a"),
+                 rank = c(1, 2, 3, 4))
+    ) %>%
+    group_by(poll_id) %>%
+    arrange(rank) %>%
+    filter(row_number() == 1) %>%
+    ungroup()
+  
+  generic_ballot <- gbp %>%
+    right_join(pops) %>%
+    mutate(end_date = as.Date(end_date,  "%m/%d/%y"),
+           days_out = as.Date("2020-11-03") - end_date) %>%
+    filter(cycle == '2020') %>%
+    group_by(question_id, poll_id) %>%
+    ungroup() %>% 
+    mutate(dem = round(dem*sample_size/100),
+           rep = round(rep*sample_size/100),
+           Other = round(sample_size - dem - rep)) %>%
+    select(Sample = sample_size, dem, rep, days_out, Other, end_date) %>%
+    na.omit() %>%
+    arrange(-days_out) 
+  
+  generic_ballot
+  
+}
+
+
+
+
+process_538_house <- function() {
+  
+  house_polls <- read_csv("https://projects.fivethirtyeight.com/polls-page/house_polls.csv")
+  
+  # Prefer LV then RV then V then A
+  pops <- house_polls %>%
+    count(poll_id, population) %>%
+    left_join(
+      data_frame(population = c("lv", "rv", "v", "a"),
+                 rank = c(1, 2, 3, 4))
+    ) %>%
+    group_by(poll_id) %>%
+    arrange(rank) %>%
+    filter(row_number() == 1) %>%
+    ungroup()
+  
+  house_data <- house_polls %>%
+    right_join(pops) %>%
+    filter(population != 'a', cycle == 2020, stage == "general") %>%
+    group_by(poll_id, question_id) %>%
+    filter(n_distinct(candidate_party) > 1) %>%
+    ungroup() %>%
+    mutate(end_date = as.Date(end_date,  "%m/%d/%y"),
+           days_out = as.Date("2020-11-03") - end_date) %>%
+    select(poll_id, question_id, state, district = seat_number,
+           pct, candidate_party, sample_size, days_out, end_date) %>% 
+    spread(candidate_party, pct) %>%
+    mutate(rep = round(REP*sample_size/100),
+           dem = round(DEM*sample_size/100),
+           Other = round(sample_size - rep - dem)) %>%
+    select(state, district,
+           Sample = sample_size, rep, dem, days_out, Other, end_date) %>%
+    na.omit() %>%
+    arrange(-days_out) 
+  
+  house_data
+  
+}
