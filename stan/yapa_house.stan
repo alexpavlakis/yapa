@@ -69,5 +69,4 @@ model {
   theta_gb[1] ~ normal(0.5, 0.1);
   theta_gb[2] ~ normal(0.5, 0.1);
   theta_gb[3] ~ normal(0.02, 0.01);
-  tau ~ normal(0, 0.1);
 }
