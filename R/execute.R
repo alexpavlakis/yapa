@@ -17,7 +17,7 @@ system("open docs/index.html")
 
 
 
-dates <- seq.Date(as.Date("2020-06-25"), Sys.Date(), by = 'day')
+dates <- seq.Date(as.Date("2020-07-07"), Sys.Date(), by = 'day')
 
 for(i in 1:length(dates)) {
   exec_date <- dates[i]

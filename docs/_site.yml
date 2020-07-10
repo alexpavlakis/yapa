@@ -3,12 +3,13 @@ output_dir: "."
 navbar:
   title: " "
   left:
-  - text: "2020"
+  - text: "2020 - President"
     href: index.html
-    google_analytics: "UA-168769307-1"
+  - text: "2020 - House"
+    href: 2020-house.html
   #- text: "2016"
   #  href: "2016.html"
-  - text: "Methodology"
-    href: yapa.html
+  #- text: "Methodology"
+  #  href: yapa.html
 output:
   html_document

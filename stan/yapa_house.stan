@@ -2,7 +2,7 @@ functions {
   // Helper to convert weighted counts from real to int for binomial model
   int real_to_int(real x) {
     int out = 0;
-    while(out < round(x)) {
+    while(out < floor(x)) {
       out += 1;
     }
     return out;
@@ -21,6 +21,8 @@ data {
   matrix[n_districts, n_options] p_lean;
   matrix[n_districts, n_options] inc;
   real<lower = 0> decay_param;  // parameter for exponential decay weighting
+  vector<lower = 0>[n_options] tau;
+  vector<lower = 0>[n_districts] any_data;
 }
 transformed data {
   // Weight each poll by recency, according to exp decay model
@@ -44,15 +46,6 @@ transformed data {
 parameters {
   simplex[n_options] theta_gb; // simplex of simulated poll averages
   simplex[n_options] theta[n_districts];
-  vector<lower = 0>[n_options] tau;
-}
-transformed parameters {
-  matrix[n_districts, n_options] adj;
-  for(o in 1:n_options) {
-    for(d in 1:n_districts) {
-      adj[d, o] = 0.91*(theta_gb[o] + p_lean[d, o]) + 0.06*inc[d, o];
-    }
-  }
 }
 model {
   for(o in 1:n_options) {
@@ -63,10 +56,10 @@ model {
       y_wt[i, o] ~ binomial(n_wt[i], theta[district_id[i]][o]);
     }
     for(d in 1:n_districts) {
-      theta[d][o] ~ normal(adj[d, o], tau[o]);
+      theta[d][o] ~ normal(0.91*(theta_gb[o] + p_lean[d, o]) + 0.06*inc[d, o], tau[o]);
     }
   }
-  theta_gb[1] ~ normal(0.5, 0.1);
-  theta_gb[2] ~ normal(0.5, 0.1);
-  theta_gb[3] ~ normal(0.02, 0.01);
+  theta_gb[1] ~ beta(40, 50);
+  theta_gb[2] ~ beta(60, 50);
+  theta_gb[3] ~ beta(1, 50);
 }
