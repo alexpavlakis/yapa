@@ -22,7 +22,6 @@ data {
   matrix[n_districts, n_options] inc;
   real<lower = 0> decay_param;  // parameter for exponential decay weighting
   vector<lower = 0>[n_options] tau;
-  vector<lower = 0>[n_districts] any_data;
 }
 transformed data {
   // Weight each poll by recency, according to exp decay model

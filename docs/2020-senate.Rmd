@@ -1,0 +1,269 @@
+---
+title: "2020 - Senate"
+output: 
+  html_document:
+    theme: cerulean
+    toc: true
+    toc_float: true
+    toc_depth: 4
+---
+<style type="text/css">
+body { 
+  font-size: 16px;
+}
+</style>
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = F, message = F, cache = F, fig.align = 'center')
+```
+
+
+```{r data}
+library(tidyverse)
+
+load("../results/senate_state_results")
+load("../results/senate_simulations")
+load("../results/senate_res_sims")
+load("../results/senate_p_dem")
+
+senate_ts <- read_csv("../results/senate_ts.csv")
+state_ts <- read_csv("../results/senate_state_ts.csv")
+
+```
+
+_Updated `r gsub(" 0", " ", format(Sys.Date(), format="%B %d, %Y"))`, `r as.numeric(as.Date("2020-11-03") - Sys.Date())` days from election day 2020._
+
+# Who will win control of the Senate?
+
+
+```{r topline-house}
+dem <- round(quantile(res_sims[, 2], c(0.05, 0.95))) + 35
+rep <- round(quantile(res_sims[, 1], c(0.05, 0.95))) + 30
+```
+
+The Democrats are projected to win **between `r dem[1]` and `r dem[2]`** seats in the Senate.  The Republicans are projected to win **between `r rep[1]` and `r rep[2]`** seats in the Senate.  In `r dim(res_sims)[1]` simulations of the Senate elections from the perspective of `r gsub(" 0", " ", format(Sys.Date(), format="%B %d, %Y"))`, the Democrats win a majority in **`r paste0(round(mean(res_sims[, 2] + 35 > res_sims[, 1] + 30)*100), "%")`** and the Republicans win a majority in **`r paste0(round(mean(res_sims[, 1] + 30 > res_sims[, 2] + 35)*100), "%")`**. (Assuming the two independent senators, neither of whom is up for re-election, continue to caucus with the Democrats).
+
+
+```{r houseplot, results = T}
+data_frame(
+  seats = c(res_sims[, 1] + 30, res_sims[, 2] + 35),
+  candidate = c(rep("Republican", nrow(res_sims)), rep("Democrat", nrow(res_sims)))
+) %>% 
+  ggplot() +
+  aes(x = seats, fill = candidate, y = ..density..) +
+  geom_histogram(alpha = 0.7, bins = 30,
+                 position = "identity") +
+  scale_x_continuous(limits = c(35, 65),
+                     breaks = c(seq(0, 100, 5))) +
+  scale_fill_manual(values = c("blue", "red")) +
+  geom_vline(xintercept = 218, lty = 2, col = "darkgrey") +
+  theme_minimal() +
+  labs(x = "seats in the House of Representatives", y = NULL, fill = NULL, 
+       title = "distribution of potential Senate elections outcomes") +
+  theme(legend.position = "bottom",
+        plot.title = element_text(size = 16, color = "#007ba7", hjust = 0.5),
+        plot.subtitle = element_text(hjust = .5, color = "#007ba7", size = 10),
+        strip.text = element_text(size = 15, hjust = .5,
+                                  color = "#007ba7"),
+        panel.grid.minor = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.x = element_text(color = 'grey35'),
+        axis.text.x = element_text(size = 11)) +
+  facet_wrap(~candidate, nrow = 2) +
+  guides(fill = F)
+
+```
+
+
+```{r over time}
+senate_ts %>%
+  mutate(lower_rep = lower_rep + 31,
+         mean_rep = mean_rep + 31,
+         upper_rep = upper_rep + 31,
+         lower_dem = lower_dem + 33,
+         mean_dem = mean_dem + 33,
+         upper_dem = upper_dem + 33) %>%
+  gather(metric, value, -date) %>%
+  mutate(party = sapply(strsplit(metric, "_"), tail, 1),
+         party = ifelse(party == "dem", "Democrat", "Republican"),
+         metric = sapply(strsplit(metric, "_"), head, 1)) %>%
+  spread(metric, value) %>%
+  ggplot() +
+  aes(x = date, y = mean, ymin = lower, ymax = upper,
+      col = party, fill = party) +
+  geom_vline(xintercept = as.Date("2020-11-03"), lty = 2, col = "darkgrey") +
+  geom_hline(yintercept = 50, lty = 2, col = "darkgrey") +
+  geom_line() +
+  geom_ribbon(col = NA, alpha = 0.2) +
+  scale_x_date(limits = c(as.Date("2020-07-01"), as.Date("2020-11-10")),
+               date_breaks = "1 month",
+               date_labels =  "%b, %Y") +
+  scale_y_continuous(limits = c(0, 100),
+                     breaks = seq(0, 100, 10)) + 
+  theme_minimal() +
+  scale_color_manual(values = c("blue", "red")) +
+  scale_fill_manual(values = c("blue", "red")) +
+  labs(col = NULL, fill = NULL, x = NULL, 
+       title = 'how the senate forecast has changed over time',
+       y = "House seats") +
+  theme(panel.grid.minor = element_blank(),
+        legend.position = "bottom", 
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.title.y = element_text(size = 9),
+        plot.title = element_text(size = 16, color = "#007ba7", hjust = 0.5)) +
+  guides(col = F, fill = F) 
+
+
+```
+
+```{r houseratings}
+senate_ratings <- p_dem %>%
+  mutate(cat = case_when(p_dem < 0.1 ~ 'Safe Rep',
+                         p_dem > 0.9 ~ 'Safe Dem',
+                         p_dem >= 0.8 ~ "Likely Dem",
+                         p_dem > 0.6 & p_dem < 0.8 ~ "Lean Dem",
+                         p_dem <= 0.2 ~ "Likely Rep",
+                         p_dem > 0.2 & p_dem < 0.4 ~ "Lean Rep", 
+                         TRUE ~ "Uncertain")) 
+```
+
+# Who will win each state?
+
+Among the 35 Senate seates available, **`r length(senate_ratings$state[!senate_ratings$cat %in% c('Safe Dem', 'Safe Rep')])` (`r paste0(round(length(senate_ratings$state[!senate_ratings$cat %in% c('Safe Dem', 'Safe Rep')])/34*100), "%")`)** are competitive (meaning that the Democrat or Republican is not a shoe-in) as of `r gsub(" 0", " ", format(Sys.Date(), format="%B %d, %Y"))`.  The table below lists the competitive districts arranged by partisan lean.
+
+
+```{r house_results, results = 'asis', fig.height = 4}
+
+senate_ratings %>% 
+  group_by(cat) %>%
+  arrange(-p_dem) %>%
+  mutate(rank = row_number()) %>%
+  ungroup() %>%
+  mutate(rank = max(rank) - rank) %>%
+  ggplot() +
+  aes(x = reorder(cat, -p_dem), y = rank, label = state, col = p_dem) +
+  geom_text(alpha = 0.8, size = 5, face = 'bold') +
+  scale_x_discrete(position = "top") +
+  theme_void() +
+  theme(axis.text.x = element_text(size = 15, color = "#007ba7"),
+        axis.text.y = element_blank(),
+        plot.title = element_text(color = "#007ba7")) +
+  labs(x = NULL, y = NULL) +
+  guides(col = F) +
+  scale_color_gradient(low = "red",  high = "blue")
+
+```
+
+
+```{r table}
+DT::datatable(senate_state_results, options = list(scrollX = TRUE, 
+                                            scrollY = "200px",
+                                            pageLength = 51))
+```
+
+# States
+```{r district-detail, results = TRUE}
+
+plot_state_ts <- function(d) {
+  plot_data <- state_ts %>% 
+    filter(state == d) %>% select(-state) %>%
+    gather(metric, value, -date) %>%
+    mutate(party = sapply(strsplit(metric, "_"), tail, 1),
+           metric = sapply(strsplit(metric, "_"), head, 1)) %>%
+    spread(metric, value)
+  current_rates <- state_ts %>% filter(state == d, date == max(date)) %>% select(mean_rep, mean_dem) %>% unlist()
+  current_rates_pos <- state_ts %>% filter(state == d, date == max(date)) %>% select(mean_rep, mean_dem) %>% unlist()
+  if(abs(current_rates_pos[1] - current_rates_pos[2]) < 0.03) {
+    current_rates_pos[current_rates_pos == min(current_rates_pos)] <-  min(current_rates_pos) - 0.012
+    current_rates_pos[current_rates_pos == max(current_rates_pos)] <- max(current_rates_pos) + 0.012
+  }
+  p <- plot_data %>%
+    ggplot() +
+    aes(x = date, y = mean, ymin = lower, ymax = upper,
+        col = party, fill = party) +
+  annotate("text", x = max(state_ts$date), y = current_rates_pos,
+           label = paste0(round(current_rates*100), "%"),
+           hjust = 0, col = c("red", "blue"), size = 3.5) +
+    geom_line(aes(group = party)) +
+    geom_ribbon(col = NA, alpha = 0.2) +
+    scale_x_date(limits = c(as.Date("2020-07-01"), as.Date("2020-11-10")),
+                 date_breaks = "1 month",
+                 date_labels =  "%b, %Y") +
+    scale_y_continuous(limits = c(0, 1),
+                       breaks = seq(0, 1, 0.25),
+                       labels = paste0(seq(0, 100, 25), "%")) +
+    geom_vline(xintercept = as.Date("2020-11-03"), lty = 2, col = "darkgrey") +
+    theme_minimal() +
+    scale_color_manual(values = c("blue", "red")) +
+    scale_fill_manual(values = c("blue", "red")) +
+    labs(col = NULL, fill = NULL, y = NULL, x = NULL, title = NULL) +
+    theme(legend.position = "bottom",
+          plot.title = element_text(size = 15, face = "bold",
+                                    color = "#007ba7", hjust = 0.5),
+          axis.text.x = element_text(angle = 45, hjust = 1),
+          panel.grid.minor = element_blank()) +
+    guides(col = F, fill = F)
+  print(p)
+}
+
+p_win <- function(d, p = "dem") {
+  oppo <- ifelse(p == "dem", "rep", "dem")
+  res <- senate_simulations %>%
+    filter(state == d) %>%
+    summarise(pwin = mean(value[party == p] > value[party == oppo])) %>%
+    pull(pwin) %>%
+    round(3)
+  res
+}
+
+```
+
+
+```{r districtts, results='asis'}
+library(pander)
+for (d in senate_ratings$state) {
+  pwin <- p_win(d, "dem")
+  pwin <- case_when(pwin < 0.01 ~ "less than 1%",
+                    pwin > 0.99 ~ "more than 99%", 
+                    TRUE ~ paste0(round(pwin*100, 0), "%"))
+  prep <- p_win(d, "rep")
+  prep <- case_when(prep < 0.01 ~ "less than 1%",
+                    prep > 0.99 ~ "more than 99%", 
+                    TRUE ~ paste0(round(prep*100, 0), "%"))
+   pander::pandoc.header(d, level = 2)
+   pander::pandoc.p('\n')
+   pander::pandoc.p(paste0('The Democrat is projected to receive **between ',
+                           round(100*state_ts$lower_dem[state_ts$state == d 
+                           & state_ts$date == max(state_ts$date)], 0), '% and ',
+                           round(100*state_ts$upper_dem[state_ts$state == d 
+                           & state_ts$date == max(state_ts$date)], 0), 
+                           '%** of the vote in ', d, 
+                           '. The Republican is projected to receive **between ',
+                           round(100*state_ts$lower_rep[state_ts$state == d 
+                           & state_ts$date == max(state_ts$date)], 0), '% and ',
+                           round(100*state_ts$upper_rep[state_ts$state == d 
+                           & state_ts$date == max(state_ts$date)], 0), 
+                           '%**.  Out of ', dim(senate_simulations)[1]/(34*3), 
+                           ' simulations of the election in ', d, 
+                           ', the Democrat wins **', pwin, '** and the Republican wins **', 
+                           prep, '**.'))
+   plot_state_ts(d)
+   pander::pandoc.p('\n')
+}
+```
+
+# Polls
+
+```{r polls-table}
+senate_polls <- read_csv('../data/senate_polls.csv')
+senate_polls %>%
+  arrange(state, days_out) %>%
+  filter(Sample > 0) %>%
+  mutate(Rep = paste0(round(rep/Sample, 2)*100, "%"),
+         Dem = paste0(round(dem/Sample, 2)*100, "%"),
+         Other = paste0(round(Other/Sample, 2)*100, "%")) %>%
+  select(State = state, State = state, 
+         Rep, Dem, Other, Sample, `Poll End Date` = end_date) %>%
+  DT::datatable(options = list(scrollX = TRUE, scrollY = "500px", pageLength = nrow(senate_polls)))
+```

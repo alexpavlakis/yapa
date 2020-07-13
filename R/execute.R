@@ -24,3 +24,21 @@ for(i in 1:length(dates)) {
   print(exec_date)
   source("R/fit_yapa.R")
 }
+
+
+
+
+dates <- seq.Date(as.Date("2020-06-01"), as.Date("2020-06-09"), by = 'day')
+
+for(i in 1:length(dates)) {
+  exec_date <- dates[i]
+  start <- Sys.time()
+  print(exec_date)
+  source("R/fit_house.R")
+  print(Sys.time() - start)
+}
+
+exec_date <- Sys.Date()
+source("R/fit_house.R")
+
+colMeans(efgb$theta_gb)

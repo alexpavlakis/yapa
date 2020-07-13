@@ -24,7 +24,12 @@ election_results <- house_raw %>%
          party = ifelse(str_detect(party, 'republic'), 'republican', party),
          party = ifelse(!party %in% c('democrat', 'republican'), 'other', party),
          candidate = ifelse(party == 'other', 'other', candidate)) %>%
-  group_by(year, state, district, party, candidate) %>%
+  mutate(win = ifelse(candidatevotes == max(candidatevotes), 1, 0)) %>%
+  group_by(state, district, party) %>%
+  mutate(inc = ifelse(candidate == lag(candidate) & lag(win) == 1, 1, 0),
+         inc = ifelse(is.na(inc), 0, inc)) %>%
+  ungroup() %>%
+  group_by(year, state, district, party, win, inc) %>%
   summarise(candidatevotes = sum(candidatevotes),
             totalvotes = max(totalvotes)) %>%
   ungroup() %>%
@@ -48,6 +53,8 @@ gen_results <- election_results %>%
   mutate(gen_t1 = lag(gen_t)) %>%
   ungroup()
 
+write_csv(gen_results, "data/house_gen_results.csv")
+
 house_results <- election_results %>%
   left_join(gen_results) %>%
   group_by(party, district, state) %>%
@@ -57,10 +64,6 @@ house_results <- election_results %>%
          p_lean1 = lag(p_lean)) %>%
   group_by(year, state, district) %>%
   mutate(win = ifelse(pct == max(pct), 1, 0)) %>%
-  ungroup() %>%
-  group_by(state, district, party) %>%
-  arrange(year) %>%
-  mutate(inc = ifelse(candidate == lag(candidate) & lag(win) == 1, 1, 0)) %>%
   ungroup() 
 
 
@@ -71,8 +74,10 @@ model_data <- house_results %>%
   group_by(year, state, district) %>%
   filter(n_distinct(party) > 1) %>%
   ungroup() %>%
-  mutate(adj = gen_t + p_lean1) %>%
-  select(year, party, pct, gen_t, p_lean1, adj, inc) 
+  mutate(adj = gen_t + p_lean1,
+         other = ifelse(party == 'other', 1, 0)) %>%
+  select(year, party, pct, gen_t, p_lean1, adj, inc, other) %>%
+  na.omit()
 
 m <- lm(pct ~ adj + inc + 0, data = model_data)
 m

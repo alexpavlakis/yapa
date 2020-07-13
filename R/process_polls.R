@@ -231,3 +231,47 @@ process_538_house <- function() {
   house_data
   
 }
+
+
+
+
+
+# Function to retrieve and process senate polls
+
+process_538_senate <- function() {
+  
+  senate_polls <- read_csv("https://projects.fivethirtyeight.com/polls-page/senate_polls.csv")
+  
+  # Prefer LV then RV then V then A
+  pops <- senate_polls %>%
+    count(poll_id, population) %>%
+    left_join(
+      data_frame(population = c("lv", "rv", "v", "a"),
+                 rank = c(1, 2, 3, 4))
+    ) %>%
+    group_by(poll_id) %>%
+    arrange(rank) %>%
+    filter(row_number() == 1) %>%
+    ungroup()
+  
+  senate_data <- senate_polls %>%
+    right_join(pops) %>%
+    filter(population != 'a', cycle == 2020, stage == "general") %>%
+    group_by(poll_id, question_id) %>%
+    filter(n_distinct(candidate_party) > 1) %>%
+    ungroup() %>%
+    mutate(end_date = as.Date(end_date,  "%m/%d/%y"),
+           days_out = as.Date("2020-11-03") - end_date) %>%
+    select(poll_id, question_id, state, 
+           pct, candidate_party, sample_size, days_out, end_date) %>% 
+    spread(candidate_party, pct) %>%
+    mutate(rep = round(REP*sample_size/100),
+           dem = round(DEM*sample_size/100),
+           Other = round(sample_size - rep - dem)) %>%
+    select(state, Sample = sample_size, rep, dem, days_out, Other, end_date) %>%
+    na.omit() %>%
+    arrange(-days_out) 
+  
+  senate_data
+  
+}

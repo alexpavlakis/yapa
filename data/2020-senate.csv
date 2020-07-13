@@ -1,0 +1,106 @@
+state,party,candidate,inc,last_pct
+Alabama,dem,Doug Jones,1,0.5
+Alabama,rep,,0,
+Alabama,other,,0,
+Alaska,dem,,0,
+Alaska,rep,Dan Sullivan,1,0.48
+Alaska,other,,0,
+Arizona,dem,,0,
+Arizona,rep,,0,
+Arizona,other,,0,
+Arkansas,dem,,0,
+Arkansas,rep,Cotton,1,0.565
+Arkansas,other,,0,
+Colorado,dem,,0,
+Colorado,rep,Cory Gardner,1,0.482
+Colorado,other,,0,
+Delaware,dem,Chris Coons,1,0.558
+Delaware,rep,,0,
+Delaware,other,,0,
+Georgia,dem,,0,
+Georgia,rep,Kelly Loeffler,1,
+Georgia,other,,0,
+Georgia,dem,,0,
+Georgia,rep,David Perdue,1,0.529
+Georgia,other,,0,
+Idaho,dem,,0,
+Idaho,rep,Jim Risch,1,0.653
+Idaho,other,,0,
+Illinois,dem,Dick Durbin,1,0.535
+Illinois,rep,,0,
+Illinois,other,,0,
+Iowa,dem,Joni Ernst,1,0.521
+Iowa,rep,,0,
+Iowa,other,,0,
+Kansas,dem,,0,
+Kansas,rep,,0,
+Kansas,other,,0,
+Kentucky,dem,,0,
+Kentucky,rep,Mitch McConnel,1,0.562
+Kentucky,other,,0,
+Louisiana,dem,,0,
+Louisiana,rep,Bill Cassidy,1,0.559
+Louisiana,other,,0,
+Maine,dem,,0,
+Maine,rep,Susan Collins,1,0.685
+Maine,other,,0,
+Massachusetts,dem,Ed Markey,1,0.619
+Massachusetts,rep,,0,
+Massachusetts,other,,0,
+Michigan,dem,Gary Peters,1,0.546
+Michigan,rep,,0,
+Michigan,other,,0,
+Minnesota,dem,Tina Smith,1,0.53
+Minnesota,rep,,0,
+Minnesota,other,,0,
+Mississippi,dem,,0,
+Mississippi,rep,Ciny Hyde-Smith,1,0.536
+Mississippi,other,,0,
+Montana,dem,,0,
+Montana,rep,Steve Daines,1,0.579
+Montana,other,,0,
+Nebraska,dem,,0,
+Nebraska,rep,Ben Sasse,1,0.645
+Nebraska,other,,0,
+New Hampshire,dem,Jeanne Shaheen,1,0.515
+New Hampshire,rep,,0,
+New Hampshire,other,,0,
+New Jersey,dem,Cory Booker,1,0.558
+New Jersey,rep,,0,
+New Jersey,other,,0,
+New Mexico,dem,,0,
+New Mexico,rep,,0,
+New Mexico,other,,0,
+North Carolina,dem,,0,
+North Carolina,rep,Thom Tillis,1,0.488
+North Carolina,other,,0,
+Oklahoma,dem,,0,
+Oklahoma,rep,Jim Inhofe,1,0.68
+Oklahoma,other,,0,
+Oregon,dem,Jeff Merkley,1,0.557
+Oregon,rep,,0,
+Oregon,other,,0,
+Rhode Island,dem,Jack Reed,1,0.706
+Rhode Island,rep,,0,
+Rhode Island,other,,0,
+South Carolina,dem,,0,
+South Carolina,rep,Lindsay Graham,1,0.553
+South Carolina,other,,0,
+South Dakota,dem,,0,
+South Dakota,rep,Mike Rounds,1,0.504
+South Dakota,other,,0,
+Tennessee,dem,,0,
+Tennessee,rep,,0,
+Tennessee,other,,0,
+Texas,dem,,0,
+Texas,rep,John Cornyn,1,0.616
+Texas,other,,0,
+Virginia,dem,Mark Warner,1,0.491
+Virginia,rep,,0,
+Virginia,other,,0,
+West Virginia,dem,,0,
+West Virginia,rep,Shelley Moore Capito,1,0.621
+West Virginia,other,,0,
+Wyoming,dem,,0,
+Wyoming,rep,,0,
+Wyoming,other,,0,

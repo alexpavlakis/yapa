@@ -1,3 +1,4 @@
+
 library(tidyverse)
 library(rstan)
 options(mc.cores = parallel::detectCores())
@@ -6,8 +7,8 @@ rstan_options(auto_write = TRUE)
 source("R/process_polls.R")
 #source("R/house_data.R")
 prior_data <- read_csv("data/prior_data.csv")
+gen_res <- read_csv("data/gen_res.csv")
 
-average_miss <- c(0.0279, 0.176, -0.455)
 if(!exists("exec_date")) exec_date <- Sys.Date()
 
 generic_ballot <- process_538_gb() %>%
@@ -20,8 +21,8 @@ house_races <- process_538_house() %>%
 write_csv(house_races, "data/house_races.csv")
 
 district_polls <- house_races %>%
-  mutate(dem = round(dem + .4*Other), rep = round(rep + .4*Other), 
-         Other = round(0.2*Other)) %>%
+  #mutate(dem = round(dem + .4*Other), rep = round(rep + .4*Other), 
+  #       Other = round(0.2*Other)) %>%
   right_join(prior_data %>%
                distinct(state, district)) %>%
   mutate(state_district = paste(state, district, sep = "-")) %>%
@@ -31,11 +32,8 @@ district_polls <- house_races %>%
 
 state_district <- unique(district_polls$state_district)
 
-gen_res <- house_results %>%
-  filter(year == 2018) %>%
-  distinct(party, gen_t) 
 
-p_lean <- prior_data %>%
+lean <- prior_data %>%
   select(-inc) %>%
   spread(party, p_lean1) %>%
   mutate(state_district = paste(state, district, sep = "-")) %>%
@@ -47,86 +45,80 @@ p_lean <- prior_data %>%
          other = ifelse(is.na(other), -gen_res$gen_t[gen_res$party == 'other'], other)) %>%
   as.matrix() 
 
-inc <- prior_data %>%
-  select(-p_lean1) %>%
-  spread(party, inc) %>%
-  mutate(state_district = paste(state, district, sep = "-")) %>%
-  arrange(state, district) %>%
-  mutate(district_id = match(state_district, unique(state_district))) %>%
-  select(republican, democrat, other) %>%
-  as.matrix() %>%
-  apply(., 2, function(x) ifelse(is.na(x), 0, x))
-
-
 
 # Counts for each option in each district poll
-y <- district_polls %>%
+y_r <- district_polls %>%
   select(rep, dem, Other) %>%
   as.matrix() %>%
   apply(., 2, function(x) ifelse(is.na(x), 0, x))
 
 # Counts for each option in each GB poll
-y_gb <- generic_ballot %>%
-  mutate(dem = round(dem + .4*Other), rep = round(rep + .4*Other), 
-         Other = round(0.2*Other)) %>%
+y_g <- generic_ballot %>%
+  #mutate(dem = round(dem + .4*Other), rep = round(rep + .4*Other), 
+  #       Other = round(0.2*Other)) %>%
   select(rep, dem, Other) %>%
   as.matrix() %>%
   apply(., 2, function(x) ifelse(is.na(x), 0, x))
 
-
-any_data <- district_polls %>%
-  group_by(state, district) %>%
-  summarise(any_data = ifelse(sum(Sample, na.rm = T) > 0, 1, 0)) %>%
-  ungroup() %>%
-  pull(any_data)
-
 # Number of district polls
-N <- nrow(y)
+n_polls_r <- nrow(y_r)
 
 # Number of GB polls
-N_gb <- nrow(y_gb)
-
-mean_gb <- colSums(y_gb)/sum(y_gb)
+n_polls_g <- nrow(y_g)
 
 # Number of candidates
-n_options <- ncol(y)
+n_options <- ncol(y_g)
 
 # Days out from election (for weighting)
-days_out <- as.numeric(district_polls$days_out) 
-days_out_gb <- as.numeric(generic_ballot$days_out) 
+days_out_r <- as.numeric(district_polls$days_out) 
+days_out_g <- as.numeric(generic_ballot$days_out) 
 
-district_id <- district_polls$district_id
-n_districts <- n_distinct(district_id)
+region_id <- district_polls$district_id
+n_regions <- n_distinct(region_id)
 
-gb <- colSums(y_gb*exp(-days_out_gb/40))/sum(rowSums(y_gb)*exp(-days_out_gb/40))
+load('data/non_samp_error')
+load('data/non_samp_corr')
 
-
+non_samp_error <- c(0.025, 0.036, -0.061)
+region_error <- rep(0.02, n_regions)
 
 
 # Combine into list
 model_data <- list(n_options = n_options, 
-                   n_districts = n_districts,
-                   N = N, N_gb = N_gb,
-                   y = y, y_gb = y_gb,
-                   days_out = days_out,
-                   days_out_gb = days_out_gb,
-                   p_lean = p_lean,
-                   district_id = district_id,
-                   tau = c(0.1, 0.1, 0.005),
-                   inc = inc, any_data = any_data,
-                   decay_param = 40)
+                   n_regions = n_regions,
+                   n_options = n_options,
+                   n_polls_r = n_polls_r,
+                   n_polls_g = n_polls_g,
+                   y_g = y_g, y_r = y_r,
+                   region_id = region_id,
+                   lean = lean,
+                   days_out_g = days_out_g,
+                   days_out_r = days_out_r,
+                   non_samp_error = non_samp_error,
+                   non_samp_corr = non_samp_corr,
+                   region_error = region_error,
+                   decay_param = 40,
+                   prior_g = c(0.45, 0.53, 0.02),
+                   prior_sd_g = c(0.01, 0.01, 0.01))
 
 start <- Sys.time()
-fit_gb <- stan("stan/yapa_house.stan", data = model_data,
-               chains = 10, iter = 2000)
+fit_house <- stan("stan/yapa.stan", data = model_data,
+                  chains = 10, iter = 2000)
 print(Sys.time() - start)
 
-efgb <- extract(fit_gb)
 
 
-colMeans(efgb$theta_gb)
 
-colMeans(efgb$theta)[c(155:157), ]
+
+# results -----------------------------------------------------------------
+
+
+ef_house <- extract(fit_house)
+
+
+colMeans(ef_house$res_g)
+
+colMeans(ef_house$res_r)[c(155:157), ]
 
 
 
@@ -136,15 +128,15 @@ colMeans(efgb$theta)[c(155:157), ]
 # National
 poll_averages_gb_today <- data_frame(
   date = exec_date,
-  lower_rep = quantile(efgb$theta_gb[, 1], 0.1),
-  mean_rep  = quantile(efgb$theta_gb[, 1], 0.5),
-  upper_rep = quantile(efgb$theta_gb[, 1], 0.9),
-  lower_dem = quantile(efgb$theta_gb[, 2], 0.1),
-  mean_dem  = quantile(efgb$theta_gb[, 2], 0.5),
-  upper_dem = quantile(efgb$theta_gb[, 2], 0.9),
-  lower_other = quantile(efgb$theta_gb[, 3], 0.1),
-  mean_other  = quantile(efgb$theta_gb[, 3], 0.5),
-  upper_other = quantile(efgb$theta_gb[, 3], 0.9)
+  lower_rep = quantile(ef_house$res_g[, 1], 0.1),
+  mean_rep  = quantile(ef_house$res_g[, 1], 0.5),
+  upper_rep = quantile(ef_house$res_g[, 1], 0.9),
+  lower_dem = quantile(ef_house$res_g[, 2], 0.1),
+  mean_dem  = quantile(ef_house$res_g[, 2], 0.5),
+  upper_dem = quantile(ef_house$res_g[, 2], 0.9),
+  lower_other = quantile(ef_house$res_g[, 3], 0.1),
+  mean_other  = quantile(ef_house$res_g[, 3], 0.5),
+  upper_other = quantile(ef_house$res_g[, 3], 0.9)
 ) %>% 
   gather(metric, value, -date) %>%
   mutate(candidate = sapply(strsplit(metric, "_"), tail, 1),
@@ -163,20 +155,20 @@ write_csv(poll_averages_gb, "results/poll_averages_gb.csv")
 
 
 # District
-tmp_district <- vector("list", nrow(colMeans(efgb$theta)))
+tmp_district <- vector("list", nrow(colMeans(ef_house$res_r)))
 for(s in 1:length(tmp_district)) {
   tmp_district[[s]] <- data_frame(
     date = exec_date,
     district = unique(district_polls$state_district)[s],
-    lower_rep = quantile(efgb$theta[, s, 1], 0.1),
-    mean_rep  = quantile(efgb$theta[, s, 1], 0.5),
-    upper_rep = quantile(efgb$theta[, s, 1], 0.9),
-    lower_dem = quantile(efgb$theta[, s, 2], 0.1),
-    mean_dem  = quantile(efgb$theta[, s, 2], 0.5),
-    upper_dem = quantile(efgb$theta[, s, 2], 0.9),
-    lower_other = quantile(efgb$theta[, s, 3], 0.1),
-    mean_other  = quantile(efgb$theta[, s, 3], 0.5),
-    upper_other = quantile(efgb$theta[, s, 3], 0.9)
+    lower_rep = quantile(ef_house$res_r[, s, 1], 0.1),
+    mean_rep  = quantile(ef_house$res_r[, s, 1], 0.5),
+    upper_rep = quantile(ef_house$res_r[, s, 1], 0.9),
+    lower_dem = quantile(ef_house$res_r[, s, 2], 0.1),
+    mean_dem  = quantile(ef_house$res_r[, s, 2], 0.5),
+    upper_dem = quantile(ef_house$res_r[, s, 2], 0.9),
+    lower_other = quantile(ef_house$res_r[, s, 3], 0.1),
+    mean_other  = quantile(ef_house$res_r[, s, 3], 0.5),
+    upper_other = quantile(ef_house$res_r[, s, 3], 0.9)
   )
 }
 
@@ -208,11 +200,11 @@ write_csv(district_averages, "results/district_averages.csv")
 # State
 
 # Results
-means_rep <- apply(efgb$theta, 2, function(x) mean(x[, 1]))
-quantiles_rep <- apply(efgb$theta, 2, function(x) quantile(x[, 1], c(0.1, 0.9)))
+means_rep <- apply(ef_house$res_r, 2, function(x) mean(x[, 1]))
+quantiles_rep <- apply(ef_house$res_r, 2, function(x) quantile(x[, 1], c(0.1, 0.9)))
 
-means_dem <- apply(efgb$theta, 2, function(x) mean(x[, 2]))
-quantiles_dem <- apply(efgb$theta, 2, function(x) quantile(x[, 2], c(0.1, 0.9)))
+means_dem <- apply(ef_house$res_r, 2, function(x) mean(x[, 2]))
+quantiles_dem <- apply(ef_house$res_r, 2, function(x) quantile(x[, 2], c(0.1, 0.9)))
 
 results_dem <- data_frame(
   district = state_district,
@@ -229,8 +221,8 @@ results_rep <- data_frame(
   cand  = 'rep')
 
 # Save
-save(results_dem, file = "results/theta_dem")
-save(results_rep, file = "results/theta_rep")
+save(results_dem, file = "results/res_r_dem")
+save(results_rep, file = "results/res_r_rep")
 
 # Formatted Table
 district_results <- results_dem %>%
@@ -252,7 +244,7 @@ save(district_results, file = "results/district_results")
 # P-win --------------------------------------------------------------------
 
 # Probability of winning the district
-p_dem <- round(apply(efgb$theta, 2, function(x) mean(x[, 2] > x[, 1])), 3)
+p_dem <- round(apply(ef_house$res_r, 2, function(x) mean(x[, 2] > x[, 1])), 3)
 names(p_dem) <- state_district
 p_dem <- data.frame(p_dem) %>%
   tibble::rownames_to_column("district") %>%
@@ -267,17 +259,17 @@ save(p_dem, file = "results/district_p_dem")
 
 # Simulate electoral college ----------------------------------------------
 
-res_sims <- matrix(0, nrow = dim(efgb$theta)[1], ncol = dim(efgb$theta)[3])
+res_sims <- matrix(0, nrow = dim(ef_house$res_r)[1], ncol = dim(ef_house$res_r)[3])
 
-for(i in 1:dim(efgb$theta)[1]) {
-  winner <- apply(efgb$theta[i, , ], 1, function(x) which(x == max(x)))
-  for(s in 1:dim(efgb$theta)[2]) {
+for(i in 1:dim(ef_house$res_r)[1]) {
+  winner <- apply(ef_house$res_r[i, , ], 1, function(x) which(x == max(x)))
+  for(s in 1:dim(ef_house$res_r)[2]) {
     res_sims[i, winner[s]] <- res_sims[i, winner[s]] + 1
   }
 }
 
 
-save(res_sims, file = "results/district_res_sims")
+save(res_sims, file = "results/senate_res_sims")
 
 # Create data frame of results for tracking
 house_ts_today <- data_frame(
@@ -304,17 +296,17 @@ write_csv(house_ts, "results/house_ts.csv")
 
 # State simulations -------------------------------------------------------
 
-district_simulations <- data_frame(
-  value = round(c(c(efgb$theta[, , 1]), c(efgb$theta[, , 2]), c(efgb$theta[, , 3])), 3),
-  district = rep(rep(state_district, each = dim(efgb$theta)[1]), times = 3),
-  party = rep(c("rep", "dem", "other"), each = dim(efgb$theta)[1]*n_districts)
+house_simulations <- data_frame(
+  value = round(c(c(ef_house$res_r[, , 1]), c(ef_house$res_r[, , 2]), c(ef_house$res_r[, , 3])), 3),
+  state = rep(rep(state_district, each = dim(ef_house$res_r)[1]), times = 3),
+  party = rep(c("rep", "dem", "other"), each = dim(ef_house$res_r)[1]*n_regions)
 ) %>%
-  group_by(district, party) %>%
+  group_by(state, party) %>%
   mutate(mean = round(mean(value), 3)) %>%
   ungroup() %>%
-  arrange(district)
+  arrange(state)
 
-save(district_simulations, file = "results/district_simulations")
+save(house_simulations, file = "results/house_simulations")
 
 
 
@@ -323,12 +315,12 @@ for(d in 1:length(tmp_district)) {
   tmp_district[[d]] <- data_frame(
     date = exec_date,
     district = state_district[d],
-    lower_rep = quantile(efgb$theta[, d, 1], 0.1),
-    mean_rep  = quantile(efgb$theta[, d, 1], 0.5),
-    upper_rep = quantile(efgb$theta[, d, 1], 0.9),
-    lower_dem = quantile(efgb$theta[, d, 2], 0.1),
-    mean_dem  = quantile(efgb$theta[, d, 2], 0.5),
-    upper_dem = quantile(efgb$theta[, d, 2], 0.9)
+    lower_rep = quantile(ef_house$res_r[, d, 1], 0.1),
+    mean_rep  = quantile(ef_house$res_r[, d, 1], 0.5),
+    upper_rep = quantile(ef_house$res_r[, d, 1], 0.9),
+    lower_dem = quantile(ef_house$res_r[, d, 2], 0.1),
+    mean_dem  = quantile(ef_house$res_r[, d, 2], 0.5),
+    upper_dem = quantile(ef_house$res_r[, d, 2], 0.9)
   )
 }
 
@@ -343,14 +335,4 @@ district_ts <- district_ts %>%
   rbind(district_ts_today)
 
 write_csv(district_ts, "results/district_ts.csv")
-
-
-
-
-
-
-
-
-
-
 

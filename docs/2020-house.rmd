@@ -54,9 +54,9 @@ data_frame(
 ) %>% 
   ggplot() +
   aes(x = seats, fill = candidate, y = ..density..) +
-  geom_histogram(alpha = 0.7, bins = 100,
+  geom_histogram(alpha = 0.7, bins = 180,
                  position = "identity") +
-  scale_x_continuous(limits = c(170, 270),
+  scale_x_continuous(limits = c(120, 300),
                      breaks = c(seq(0, 435, 20))) +
   scale_fill_manual(values = c("blue", "red")) +
   geom_vline(xintercept = 218, lty = 2, col = "darkgrey") +
@@ -97,7 +97,7 @@ house_ts %>%
   scale_x_date(limits = c(as.Date("2020-07-01"), as.Date("2020-11-10")),
                date_breaks = "1 month",
                date_labels =  "%b, %Y") +
-  scale_y_continuous(limits = c(160, 270),
+  scale_y_continuous(limits = c(0, 435),
                      breaks = c(0, 100, 200, 218, 400, 435)) + 
   theme_minimal() +
   scale_color_manual(values = c("blue", "red")) +
@@ -117,12 +117,12 @@ house_ts %>%
 
 ```{r houseratings}
 house_ratings <- p_dem %>%
-  mutate(cat = case_when(p_dem < 0.1 ~ 'Safe Dem',
-                         p_dem > 0.9 ~ 'Safe Rep',
-                         p_dem >= 0.8 ~ "Likely Dem",
-                         p_dem > 0.6 & p_dem < 0.8 ~ "Lean Dem",
-                         p_dem <= 0.2 ~ "Likely Rep",
-                         p_dem > 0.2 & p_dem < 0.4 ~ "Lean Rep", 
+  mutate(cat = case_when(p_dem < 0.25 ~ 'Safe Rep',
+                         p_dem > 0.75 ~ 'Safe Dem',
+                         p_dem >= 0.65 ~ "Likely Dem",
+                         p_dem > 0.55 & p_dem < 0.65 ~ "Lean Dem",
+                         p_dem > 0.35 & p_dem <= 0.45 ~ "Likely Rep", 
+                         p_dem <= 0.35 ~ "Lean Rep", 
                          TRUE ~ "Uncertain")) 
 ```
 
@@ -134,7 +134,7 @@ Among the 435 House districts, **`r length(house_ratings$district[!house_ratings
 ```{r house_results, results = 'asis'}
 
 house_ratings %>% 
-  filter(p_dem > 0.1, p_dem < 0.9) %>% 
+  filter(p_dem > 0.25, p_dem < 0.75) %>% 
   group_by(cat) %>%
   arrange(-p_dem) %>%
   mutate(rank = row_number()) %>%
@@ -145,7 +145,7 @@ house_ratings %>%
   geom_text(alpha = 0.8, size = 3, face = 'bold') +
   scale_x_discrete(position = "top") +
   theme_void() +
-  theme(axis.text.x = element_text(size = 15, color = "#007ba7"),
+  theme(axis.text.x = element_text(size = 12, color = "#007ba7"),
         axis.text.y = element_blank(),
         plot.title = element_text(color = "#007ba7")) +
   labs(x = NULL, y = NULL) +
