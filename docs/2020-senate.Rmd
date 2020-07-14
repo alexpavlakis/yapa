@@ -143,10 +143,10 @@ senate_ratings %>%
   mutate(rank = max(rank) - rank) %>%
   ggplot() +
   aes(x = reorder(cat, -p_dem), y = rank, label = state, col = p_dem) +
-  geom_text(alpha = 0.8, size = 5, face = 'bold') +
+  geom_text(alpha = 0.8, size = 4, face = 'bold') +
   scale_x_discrete(position = "top") +
   theme_void() +
-  theme(axis.text.x = element_text(size = 15, color = "#007ba7"),
+  theme(axis.text.x = element_text(size = 13, color = "#007ba7"),
         axis.text.y = element_blank(),
         plot.title = element_text(color = "#007ba7")) +
   labs(x = NULL, y = NULL) +

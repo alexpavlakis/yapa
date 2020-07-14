@@ -101,10 +101,10 @@ model_data <- list(n_options = n_options,
                    prior_g = c(0.45, 0.53, 0.02),
                    prior_sd_g = c(0.01, 0.01, 0.01))
 
-start <- Sys.time()
+#start <- Sys.time()
 fit_house <- stan("stan/yapa.stan", data = model_data,
                   chains = 10, iter = 2000)
-print(Sys.time() - start)
+#print(Sys.time() - start)
 
 
 
