@@ -68,11 +68,6 @@ process_538 <- function() {
   
   fte <- read_csv("https://projects.fivethirtyeight.com/polls-page/president_polls.csv") 
   
-  dems <- fte %>% 
-    count(answer) %>% 
-    filter(!answer %in% c("Biden", "Trump")) %>%
-    pull(answer)
-  
   pops <- fte %>%
     count(poll_id, population) %>%
     left_join(
@@ -177,8 +172,6 @@ process_538_gb <- function() {
     mutate(end_date = as.Date(end_date,  "%m/%d/%y"),
            days_out = as.Date("2020-11-03") - end_date) %>%
     filter(cycle == '2020') %>%
-    group_by(question_id, poll_id) %>%
-    ungroup() %>% 
     mutate(dem = round(dem*sample_size/100),
            rep = round(rep*sample_size/100),
            Other = round(sample_size - dem - rep)) %>%
@@ -262,6 +255,9 @@ process_538_senate <- function() {
     ungroup() %>%
     mutate(end_date = as.Date(end_date,  "%m/%d/%y"),
            days_out = as.Date("2020-11-03") - end_date) %>%
+    group_by(question_id, poll_id) %>%
+    filter(!any(answer %in% c("Sessions", "Loeffler", "West"))) %>%
+    ungroup() %>% 
     select(poll_id, question_id, state, 
            pct, candidate_party, sample_size, days_out, end_date) %>% 
     spread(candidate_party, pct) %>%

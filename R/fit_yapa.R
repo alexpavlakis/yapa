@@ -50,15 +50,12 @@ load("data/swing_sigma_ge")
 
 
 # Counts for each option in each state poll
-y <- polls_state %>%
+y_r <- polls_state %>%
   select(`Trump (R)`, `Biden (D)`, Other) %>%
   as.matrix()
 
-# Total sample in each state poll
-n <- polls_state %>% pull(Sample)
-
 # Number of state polls
-N <- nrow(y)
+n_polls_r <- nrow(y_r)
 
 # Numeric identifier for each state
 state_id <- match(polls_state$state, unique(polls_state$state))
@@ -70,22 +67,21 @@ n_states <- n_distinct(polls_state$state)
 n_options <- ncol(y)
 
 # Days out from election (for weighting)
-days_out <- as.numeric(polls_state$days_out) 
+days_out_r <- as.numeric(polls_state$days_out) 
 
 # Counts for each GE week
-y_natl <- polls_natl %>%
+y_g <- polls_natl %>%
   select(`Trump (R)`, `Biden (D)`, Other) %>%
   as.matrix()
 
-N_natl <- nrow(y_natl)
+n_polls_g <- nrow(y_natl)
 
-days_out_natl <- as.numeric(polls_natl$days_out)
+days_out_g <- as.numeric(polls_natl$days_out)
 
-p_lean <- data_frame(
+lean <- data_frame(
   rep = prior_results$rep - 0.461,
   dem = prior_results$dem - 0.482,
-  other = prior_results$other - 0.057,
-  state = prior_results$state
+  other = prior_results$other - 0.057
 ) 
 
 
@@ -110,12 +106,30 @@ model_data <- list(n_options = n_options,
 
 
 
+model_data <- list(n_options = n_options, 
+                   n_regions = n_states,
+                   n_polls_r = n_polls_r,
+                   n_polls_g = n_polls_g,
+                   y_g = y_g, y_r = y_r,
+                   region_id = state_id,
+                   lean = lean,
+                   days_out_g = days_out_g,
+                   days_out_r = days_out_r,
+                   non_samp_error = swing,
+                   non_samp_corr = swing_sigma,
+                   region_error = state_sigma[,2],
+                   decay_param = 40,
+                   prior_g = c(0.46, 0.48, 0.06),
+                   prior_sd_g = c(0.02, 0.02, 0.02))
+
+
+
 
 
 # Fit model ---------------------------------------------------------------
 
 start <- Sys.time()
-m <- stan(file = "stan/yapa_model.stan", data = model_data, verbose = FALSE,
+m <- stan(file = "stan/yapa.stan", data = model_data, verbose = FALSE,
           chains = 10, iter = 5000)
 print(Sys.time() - start)
 
@@ -197,7 +211,7 @@ write_csv(poll_averages, "results/poll_averages.csv")
 
 # National
 # Append results to tracker and save
-qs <- apply(em$mu_natl, 2, quantile, c(0.1, 0.5, 0.9))
+qs <- apply(em$res_g, 2, quantile, c(0.1, 0.5, 0.9))
 
 load("results/ge_trend")
 
@@ -223,7 +237,7 @@ ge_trend <- ge_trend %>%
 
 save(ge_trend, file = "results/ge_trend")
 
-pv_sims <- em$mu_natl
+pv_sims <- em$res_g
 save(pv_sims, file = "results/pv_sims")
 
 

@@ -70,8 +70,8 @@ n_polls_g <- nrow(y_g)
 n_options <- ncol(y_g)
 
 # Days out from election (for weighting)
-days_out_r <- as.numeric(district_polls$days_out) 
-days_out_g <- as.numeric(generic_ballot$days_out) 
+days_out_r <- as.numeric(district_polls$days_out) - 115
+days_out_g <- as.numeric(generic_ballot$days_out) - 115
 
 region_id <- district_polls$district_id
 n_regions <- n_distinct(region_id)
