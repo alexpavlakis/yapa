@@ -1,5 +1,5 @@
 # Fit model and render site
-exec_date <- Sys.Date()
+exec_date <- Sys.Date() - 1
 
 start <- Sys.time()
 
@@ -30,14 +30,14 @@ for(i in 1:length(dates)) {
 
 
 
-dates <- seq.Date(as.Date("2020-07-01"), Sys.Date(), by = 'day')
+dates <- seq.Date(as.Date("2020-07-12"), Sys.Date(), by = 'day')
 
 for(i in 1:length(dates)) {
   exec_date <- dates[i]
   start <- Sys.time()
   print(exec_date)
   source("R/fit_house.R")
-  source("R/fit_senate.R")
+  #source("R/fit_senate.R")
   print(Sys.time() - start)
 }
 

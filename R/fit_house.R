@@ -70,17 +70,16 @@ n_polls_g <- nrow(y_g)
 n_options <- ncol(y_g)
 
 # Days out from election (for weighting)
-days_out_r <- as.numeric(district_polls$days_out) - 115
-days_out_g <- as.numeric(generic_ballot$days_out) - 115
+days_out_r <- as.numeric(district_polls$days_out) 
+days_out_g <- as.numeric(generic_ballot$days_out) 
 
 region_id <- district_polls$district_id
 n_regions <- n_distinct(region_id)
 
-load('data/non_samp_error')
-load('data/non_samp_corr')
+load('data/house_error')
+load('data/house_corr')
 
-non_samp_error <- c(0.025, 0.036, -0.061)
-region_error <- rep(0.02, n_regions)
+region_error <- rep(0.01, n_regions)
 
 
 # Combine into list
@@ -94,8 +93,8 @@ model_data <- list(n_options = n_options,
                    lean = lean,
                    days_out_g = days_out_g,
                    days_out_r = days_out_r,
-                   non_samp_error = non_samp_error,
-                   non_samp_corr = non_samp_corr,
+                   non_samp_error = house_error,
+                   non_samp_corr = house_corr,
                    region_error = region_error,
                    decay_param = 40,
                    prior_g = c(0.45, 0.53, 0.02),
@@ -117,8 +116,6 @@ ef_house <- extract(fit_house)
 
 
 colMeans(ef_house$res_g)
-
-colMeans(ef_house$res_r)[c(155:157), ]
 
 
 
