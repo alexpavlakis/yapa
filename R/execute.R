@@ -1,5 +1,5 @@
 # Fit model and render site
-exec_date <- Sys.Date() - 1
+exec_date <- Sys.Date() 
 
 start <- Sys.time()
 
@@ -9,8 +9,8 @@ source("R/fit_senate.R")
 
 # Render site
 setwd("docs")
-#rmarkdown::render_site()
-rmarkdown::render("index.Rmd")
+rmarkdown::render_site()
+#rmarkdown::render("index.Rmd")
 setwd("..")
 
 print(Sys.time() - start)

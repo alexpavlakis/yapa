@@ -72,10 +72,9 @@ days_out_g <- as.numeric(generic_ballot$days_out)
 region_id <- match(district_polls$state, unique(district_polls$state))
 n_regions <- n_distinct(region_id)
 
-load('data/non_samp_error')
-load('data/non_samp_corr')
+load('data/senate_error')
+load('data/senate_corr')
 
-non_samp_error <- c(0.025, 0.036, -0.061)
 region_error <- rep(0.02, n_regions)
 
 
@@ -90,8 +89,8 @@ model_data <- list(n_options = n_options,
                    lean = lean,
                    days_out_g = days_out_g,
                    days_out_r = days_out_r,
-                   non_samp_error = non_samp_error,
-                   non_samp_corr = non_samp_corr,
+                   non_samp_error = senate_error,
+                   non_samp_corr = senate_corr,
                    region_error = region_error,
                    decay_param = 40,
                    prior_g = c(0.45, 0.53, 0.02),
