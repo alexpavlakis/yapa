@@ -43,6 +43,11 @@ lean <- prior_data %>%
          other = ifelse(is.na(other), -gen_res$gen_t[gen_res$party == 'other'], other)) %>%
   as.matrix() 
 
+# Adjust lean for absense of candidates
+# No Dem challenger in Arkansas
+lean[which(state == 'Arkansas'), 3] <- lean[which(state == 'Arkansas'), 3]  - lean[which(state == 'Arkansas'), 2]
+lean[which(state == 'Arkansas'), 2] <- -1
+
 
 # Counts for each option in each district poll
 y_r <- district_polls %>%
@@ -301,6 +306,8 @@ for(d in 1:length(tmp_district)) {
 
 state_ts_today <- do.call(rbind, tmp_district)
 
+# Drop dem estimate for Ark since no dem is running (dem lean was re-assigned to other above)
+state_ts_today[state_ts_today$state == 'Arkansas', 6:8] <- -1
 
 # Append to state tracking data
 state_ts <- read_csv("results/senate_state_ts.csv")
@@ -310,14 +317,5 @@ state_ts <- state_ts %>%
   rbind(state_ts_today)
 
 write_csv(state_ts, "results/senate_state_ts.csv")
-
-
-
-
-
-
-
-
-
 
 
