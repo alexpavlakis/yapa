@@ -78,12 +78,12 @@ data_frame(
 
 ```{r over time}
 senate_ts %>%
-  mutate(lower_rep = lower_rep + 31,
-         mean_rep = mean_rep + 31,
-         upper_rep = upper_rep + 31,
-         lower_dem = lower_dem + 33,
-         mean_dem = mean_dem + 33,
-         upper_dem = upper_dem + 33) %>%
+  mutate(lower_rep = lower_rep + 30,
+         mean_rep = mean_rep + 30,
+         upper_rep = upper_rep + 30,
+         lower_dem = lower_dem + 35,
+         mean_dem = mean_dem + 35,
+         upper_dem = upper_dem + 35) %>%
   gather(metric, value, -date) %>%
   mutate(party = sapply(strsplit(metric, "_"), tail, 1),
          party = ifelse(party == "dem", "Democrat", "Republican"),
