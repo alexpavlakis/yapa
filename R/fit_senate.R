@@ -16,7 +16,8 @@ generic_ballot <- process_538_gb() %>%
          end_date > '2020-01-01') 
 senate_polls <- process_538_senate() %>%
   filter(end_date < exec_date, 
-         end_date > '2020-01-01')
+         end_date > '2020-01-01') %>%
+  distinct()
 
 write_csv(senate_polls, "data/senate_polls.csv")
 
