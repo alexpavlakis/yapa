@@ -30,7 +30,7 @@ for(i in 1:length(dates)) {
 
 
 
-dates <- seq.Date(as.Date("2020-07-24"), as.Date("2020-07-26"), by = 'day')
+dates <- seq.Date(as.Date("2020-08-03"), as.Date("2020-08-04"), by = 'day')
 
 for(i in 1:length(dates)) {
   exec_date <- dates[i]
