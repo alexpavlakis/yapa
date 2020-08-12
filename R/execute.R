@@ -46,3 +46,21 @@ exec_date <- Sys.Date()
 source("R/fit_house.R")
 
 colMeans(efgb$theta_gb)
+
+
+f1 <- data_frame(
+  datepartition = c('2020-06-21', '2020-06-21'),
+  contract_id = c(12345, 12345),
+  member_id = c(6789, 6789),
+  funnel_stage = c('aware', 'engaged')
+)
+
+f1 %>% knitr::kable()
+
+f1 %>%
+  group_by(datepartition, contract_id, member_id) %>%
+  summarise(aware_actions = sum(funnel_stage == 'aware'),
+            engaged_actions = sum(funnel_stage == 'engaged'),
+            considering_actions = sum(funnel_stage == 'considering')) %>%
+  ungroup() %>%
+  knitr::kable()
