@@ -67,7 +67,7 @@ n_states <- n_distinct(polls_state$state)
 n_options <- ncol(y_r)
 
 # Days out from election (for weighting)
-days_out_r <- as.numeric(polls_state$days_out) 
+days_out_r <- as.numeric(polls_state$days_out)
 
 # Counts for each GE week
 y_g <- polls_natl %>%
