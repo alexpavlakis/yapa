@@ -212,6 +212,10 @@ process_538_house <- function() {
            days_out = as.Date("2020-11-03") - end_date) %>%
     select(poll_id, question_id, state, district = seat_number,
            pct, candidate_party, sample_size, days_out, end_date) %>% 
+    group_by(poll_id, question_id, state, district, 
+             candidate_party, sample_size, days_out, end_date) %>%
+    summarise(pct = sum(pct)) %>%
+    ungroup() %>%
     spread(candidate_party, pct) %>%
     mutate(rep = round(REP*sample_size/100),
            dem = round(DEM*sample_size/100),
