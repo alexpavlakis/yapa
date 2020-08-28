@@ -121,8 +121,8 @@ house_ratings <- p_dem %>%
                          p_dem > 0.75 ~ 'Safe Dem',
                          p_dem >= 0.65 ~ "Likely Dem",
                          p_dem > 0.55 & p_dem < 0.65 ~ "Lean Dem",
-                         p_dem > 0.35 & p_dem <= 0.45 ~ "Likely Rep", 
-                         p_dem <= 0.35 ~ "Lean Rep", 
+                         p_dem > 0.35 & p_dem <= 0.45 ~ "Lean Rep", 
+                         p_dem <= 0.35 ~ "Likely Rep", 
                          TRUE ~ "Uncertain")) 
 ```
 
