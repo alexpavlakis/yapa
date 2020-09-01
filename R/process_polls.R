@@ -89,7 +89,11 @@ process_538 <- function() {
     group_by(question_id, poll_id) %>%
     filter(all(answer %in% c("Biden", "Trump", "Other"))) %>%
     ungroup() %>% 
-    select(poll_id, question_id, answer, state, pct, sample_size, days_out, end_date) %>% 
+    select(poll_id, question_id, answer, state, pct, sample_size, days_out, end_date) %>%   
+    group_by(poll_id, end_date) %>%
+    arrange(desc(sample_size)) %>%
+    filter(row_number() %in% c(1, 2)) %>%
+    ungroup() %>%
     spread(answer, pct) %>%
     mutate(`Trump (R)` = round(Trump*sample_size/100),
            `Biden (D)` = round(Biden*sample_size/100),
@@ -133,6 +137,10 @@ process_538_ge <- function() {
     filter(all(answer %in% c("Biden", "Trump", "Other"))) %>%
     ungroup() %>% 
     select(poll_id, question_id, answer, pct, sample_size, days_out, end_date) %>% 
+    group_by(poll_id, end_date) %>%
+    arrange(desc(sample_size)) %>%
+    filter(row_number() %in% c(1, 2)) %>%
+    ungroup() %>%
     spread(answer, pct) %>%
     mutate(`Trump (R)` = round(Trump*sample_size/100),
            `Biden (D)` = round(Biden*sample_size/100),
@@ -215,6 +223,10 @@ process_538_house <- function() {
     group_by(poll_id, question_id, state, district, 
              candidate_party, sample_size, days_out, end_date) %>%
     summarise(pct = sum(pct)) %>%
+    ungroup() %>%
+    group_by(poll_id, end_date) %>%
+    arrange(desc(sample_size)) %>%
+    filter(row_number() %in% c(1, 2)) %>%
     ungroup() %>%
     spread(candidate_party, pct) %>%
     mutate(rep = round(REP*sample_size/100),

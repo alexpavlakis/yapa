@@ -27,11 +27,12 @@ polls_state <- data_frame(state) %>%
          `Biden (D)` = ifelse(is.na(`Biden (D)`), 0, `Biden (D)`),
          Other = ifelse(is.na(Other), 0, Other),
          days_out = ifelse(is.na(days_out), 365, days_out)) %>%
-  arrange(state)
+  arrange(state) 
 
 # GE Model
 polls_natl <- process_538_ge() %>%
-  filter(end_date <= exec_date) 
+  filter(end_date <= exec_date) %>%
+  arrange(end_date) 
 
 # Save
 polls <- polls_natl %>%
