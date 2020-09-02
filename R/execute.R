@@ -4,8 +4,8 @@ exec_date <- Sys.Date()
 start <- Sys.time()
 
 source("R/fit_yapa.R")
-source("R/fit_house.R")
-source("R/fit_senate.R")
+#source("R/fit_house.R")
+#source("R/fit_senate.R")
 
 # Render site
 setwd("docs")
@@ -36,47 +36,22 @@ for(i in 1:length(dates)) {
 
 
 
-# Tipping point
-tipping_point <- p_biden %>%
-  left_join(
-    prior_results %>%
-      select(state, ev)
-  ) %>%
-  arrange(-p_biden) %>%
-  mutate(total_ev = cumsum(ev))
 
-tp_row <- which(abs(270 - tipping_point$total_ev) == min(abs(270 - tipping_point$total_ev)))
+win_election <- ec_sims[, 2] > ec_sims[, 1]
 
-likely_tipping_points <- tipping_point$state[(tp_row-1):(tp_row+1)]
-
-paste_and <- function(x) {
-  len_x <- length(x)
-  p1 <- paste(x[1:(len_x-1)], collapse = ", ")
-  res <- paste0(p1, ", and ", x[len_x])
-  res
+conditional_win <- vector("numeric", length(state))
+for(i in 1:length(state)) {
+  win_state <- em$mu[, i, 2] > em$mu[, i, 1]
+  conditional_win[i] <- mean(win_election[win_state])
 }
 
-tipping_point %>%
+win_election_given_win_state <- data_frame(
+  state = state,
+  conditional_win = conditional_win
+)
+
+win_election_given_win_state %>%
   ggplot() +
-  aes(x = p_biden, y = total_ev, label = state, col = p_biden,
-      size = ev) +
-  geom_hline(yintercept = 270, col = 'grey', lty = 2) +
-  geom_text() +
-  scale_x_continuous(limits = c(-.05, 1.05),
-                     breaks = seq(0, 1, .1),
-                     labels = paste0(seq(0, 100, 10), "%")) +
-  scale_y_continuous(breaks = c(100, 200, 270, 300, 400, 500, 538)) +
-  scale_color_gradient(low = "red",  high = "blue") +
-  theme_minimal() +
-  theme(panel.grid = element_blank(),
-        plot.title = element_text(size = 15, face = 'bold',
-                                  color = 'grey27'),
-        plot.subtitle = element_text(size = 9)) +
-  guides(col = F, size = F) +
-  labs(x = 'p(Biden)', y = 'cumulative electoral votes for Biden',
-       title = paste(paste_and(likely_tipping_points), 
-                     "are the most likely tipping point states"))
-
-
-
-paste_and(likely_tipping_points)
+  aes(x = conditional_win, y = reorder(state, conditional_win)) +
+  geom_point() +
+  theme_minimal()

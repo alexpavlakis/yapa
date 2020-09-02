@@ -32,7 +32,7 @@ polls_state <- data_frame(state) %>%
 # GE Model
 polls_natl <- process_538_ge() %>%
   filter(end_date <= exec_date) %>%
-  arrange(end_date) 
+  arrange(desc(end_date)) 
 
 # Save
 polls <- polls_natl %>%
