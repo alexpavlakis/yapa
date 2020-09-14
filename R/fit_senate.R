@@ -5,7 +5,6 @@ options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 
 source("R/process_polls.R")
-#source("R/house_data.R")
 prior_data <- read_csv("data/senate_prior_data.csv")
 gen_res <- read_csv("data/gen_res.csv")
 

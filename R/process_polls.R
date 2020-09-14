@@ -276,6 +276,7 @@ process_538_senate <- function() {
     ungroup() %>% 
     select(poll_id, question_id, state, 
            pct, candidate_party, sample_size, days_out, end_date) %>% 
+    filter(candidate_party %in% c("DEM", "REP")) %>%
     spread(candidate_party, pct) %>%
     mutate(rep = round(REP*sample_size/100),
            dem = round(DEM*sample_size/100),
