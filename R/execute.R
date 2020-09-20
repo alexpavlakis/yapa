@@ -21,15 +21,15 @@ system("open docs/index.html")
 
 
 
-dates <- seq.Date(as.Date("2020-09-08"), Sys.Date(), by = 'day')
+dates <- seq.Date(as.Date("2020-09-19"), Sys.Date(), by = 'day')
 
 for(i in 1:length(dates)) {
   exec_date <- dates[i]
   start <- Sys.time()
   print(exec_date)
-  #source("R/fit_yapa.R")
-  #source("R/fit_house.R")
+  source("R/fit_house.R")
   source("R/fit_senate.R")
+  source("R/fit_yapa.R")
   print(Sys.time() - start)
 }
 
