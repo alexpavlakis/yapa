@@ -17,9 +17,10 @@ print(Sys.time() - start)
 system("open docs/index.html")
 
 
-
-
-
+polls <- polls_natl %>% filter(end_date > '2020-06-01')
+dim(polls)
+fit <- yapa(y = select(polls, `Biden (D)`, `Trump (R)`), n = polls$Sample, dates = polls$end_date)
+plot(fit)
 
 dates <- seq.Date(as.Date("2020-09-19"), Sys.Date(), by = 'day')
 

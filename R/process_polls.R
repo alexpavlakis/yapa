@@ -66,7 +66,8 @@ process_rcp <- function(site, election_day = "2020-11-03", n = Inf) {
 # Return all state presidential election polls from 538 poll database
 process_538 <- function() {
   
-  fte <- read_csv("https://projects.fivethirtyeight.com/polls-page/president_polls.csv") 
+  fte <- read_csv("https://projects.fivethirtyeight.com/polls-page/president_polls.csv") %>%
+    filter(!(fte_grade %in% c('D-', 'C/D')))
   
   pops <- fte %>%
     count(poll_id, population) %>%
@@ -112,7 +113,8 @@ process_538 <- function() {
 # Return all national general election polls for Trump and Biden
 process_538_ge <- function() {
   
-  fte <- read_csv("https://projects.fivethirtyeight.com/polls-page/president_polls.csv")
+  fte <- read_csv("https://projects.fivethirtyeight.com/polls-page/president_polls.csv") %>%
+    filter(!str_detect(pollster, "Dornsife"), !(fte_grade %in% c('D-', 'C/D', 'C-', 'B/C', 'C')))
   
   # Prefer LV then RV then V then A
   pops <- fte %>%
