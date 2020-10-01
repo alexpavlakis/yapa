@@ -14,4 +14,5 @@ navbar:
   #- text: "Methodology"
   #  href: yapa.html
 output:
-  html_document
+  html_document:
+    theme: flatly
