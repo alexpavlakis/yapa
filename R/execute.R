@@ -22,7 +22,7 @@ dim(polls)
 fit <- yapa(y = select(polls, `Biden (D)`, `Trump (R)`), n = polls$Sample, dates = polls$end_date)
 plot(fit)
 
-dates <- seq.Date(as.Date("2020-09-24"), Sys.Date(), by = 'day')
+dates <- seq.Date(as.Date("2020-10-16"), Sys.Date(), by = 'day')
 
 for(i in 1:length(dates)) {
   exec_date <- dates[i]

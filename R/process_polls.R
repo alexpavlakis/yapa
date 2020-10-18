@@ -88,7 +88,7 @@ process_538 <- function() {
     filter(office_type == "U.S. President", !is.na(state)) %>%
     filter(end_date > '2020-03-01') %>%
     group_by(question_id, poll_id) %>%
-    filter(all(answer %in% c("Biden", "Trump", "Other"))) %>%
+    filter(all(answer %in% c("Biden", "Trump", "Other", "Jorgensen", "Hawkins"))) %>%
     ungroup() %>% 
     select(poll_id, question_id, answer, state, pct, sample_size, days_out, end_date) %>%   
     group_by(poll_id, end_date) %>%
