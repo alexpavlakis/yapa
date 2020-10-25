@@ -55,3 +55,11 @@ win_election_given_win_state %>%
   aes(x = conditional_win, y = reorder(state, conditional_win)) +
   geom_point() +
   theme_minimal()
+
+
+penn <- state_simulations$value[state_simulations$state == 'Mississippi' & state_simulations$candidate == 'Trump']
+nj <- state_simulations$value[state_simulations$state == 'Alabama' & state_simulations$candidate == 'Trump']
+lims <- c(min(c(nj, penn)), max(c(nj, penn)))
+
+plot(penn, nj, pch = 19, cex = 0.1, xlim = lims, ylim = lims)
+cor(penn, nj)
