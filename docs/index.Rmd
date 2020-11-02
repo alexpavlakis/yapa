@@ -145,7 +145,7 @@ ge_trend %>%
   scale_color_manual(values = c("blue", "darkgrey", "red")) +
   scale_fill_manual(values = c("blue", "darkgrey", "red")) +
   theme_minimal() +
-  scale_x_date(limits = c(as.Date('2020-04-01'), as.Date("2020-11-03")),
+  scale_x_date(limits = c(as.Date('2020-04-01'), as.Date("2020-11-07")),
                date_breaks = "1 months",
                date_labels = "%b, %Y") +
   scale_y_continuous(limits = c(0, 0.7),

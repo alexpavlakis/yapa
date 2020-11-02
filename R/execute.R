@@ -22,7 +22,7 @@ dim(polls)
 fit <- yapa(y = select(polls, `Biden (D)`, `Trump (R)`), n = polls$Sample, dates = polls$end_date)
 plot(fit)
 
-dates <- seq.Date(as.Date("2020-10-21"), Sys.Date(), by = 'day')
+dates <- seq.Date(as.Date("2020-10-31"), Sys.Date(), by = 'day')
 
 for(i in 1:length(dates)) {
   exec_date <- dates[i]
@@ -63,3 +63,14 @@ lims <- c(min(c(nj, penn)), max(c(nj, penn)))
 
 plot(penn, nj, pch = 19, cex = 0.1, xlim = lims, ylim = lims)
 cor(penn, nj)
+
+
+
+final_prediction <- p_biden %>%
+  left_join(results_biden %>% select(-cand)) %>%
+  left_join(prior_results %>% select(state, ev))
+write_csv(final_prediction, "results/final_prediction.csv")
+
+final_prediction %>%
+  filter(p_biden >= .5) %>%
+  summarise(sum(ev))
